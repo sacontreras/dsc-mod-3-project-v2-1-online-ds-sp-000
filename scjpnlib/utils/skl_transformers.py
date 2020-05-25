@@ -39,7 +39,7 @@ class DropColumnsTransformer(object) :
         return self.transform(X)
 
 
-class StringCaseTransformer(object):
+class LambdaTransformer(object):
     def __init__(self, replacement_rules_dict, error_on_bad_col=False):
         self.replacement_rules_dict = replacement_rules_dict
         self.error_on_bad_col = error_on_bad_col
@@ -65,12 +65,7 @@ class StringCaseTransformer(object):
         X_case_replaced = X.copy()
         self.columns_replacement_index_dict = {}
         for feat, f_replacement in self.replacement_rules_dict.items():
-            if f_replacement is str.upper:
-                self.columns_replacement_index_dict[feat] = X[X[feat].str.isupper()==False].index
-                X_case_replaced[feat] = X_case_replaced[feat].str.upper()
-            else:
-                self.columns_replacement_index_dict[feat] = X[X[feat].str.islower()==False].index
-                X_case_replaced[feat] = X_case_replaced[feat].str.lower()
+            X_case_replaced[feat] = X_case_replaced[feat].apply(f_replacement)
         return X_case_replaced
 
     def fit_transform(self, X, y=None): # nothing will be done to y
@@ -106,33 +101,38 @@ class SimpleValueTransformer(object):
         X_vals_replaced = X.copy()
         self.columns_replacement_index_dict = {}
         self.simple_imputers = {}
-        for feat_with_vals_to_replace, replacement_rule in self.replacement_rules_dict.items():
-            simple_imputer_default = SimpleImputer()
-            simple_imputer = SimpleImputer(
-                missing_values = replacement_rule['missing_values'] if 'missing_values' in replacement_rule else simple_imputer_default.missing_values
-                , strategy = replacement_rule['strategy'] if 'strategy' in replacement_rule else simple_imputer_default.strategy
-                , fill_value = replacement_rule['fill_value'] if 'fill_value' in replacement_rule else simple_imputer_default.fill_value
-            )
-            if self.verbose:
-                print(simple_imputer)
-            self.simple_imputers[feat_with_vals_to_replace] = simple_imputer
-            
-            if simple_imputer.missing_values is np.nan:
-                self.columns_replacement_index_dict[feat_with_vals_to_replace] = X[X[feat_with_vals_to_replace].isnull()==True].index
-            else:
-                self.columns_replacement_index_dict[feat_with_vals_to_replace] = X.loc[X[feat_with_vals_to_replace]==simple_imputer.missing_values].index
-            if self.verbose:
-                print(self.columns_replacement_index_dict[feat_with_vals_to_replace])
+        for feat_with_vals_to_replace, replacement_rules in self.replacement_rules_dict.items(): # each item maps to a list of rules for the column
+            self.simple_imputers[feat_with_vals_to_replace] = []
+            self.columns_replacement_index_dict[feat_with_vals_to_replace] = []
+            for replacement_rule in replacement_rules:
+                simple_imputer_default = SimpleImputer()
+                simple_imputer = SimpleImputer(
+                    missing_values = replacement_rule['missing_values'] if 'missing_values' in replacement_rule else simple_imputer_default.missing_values
+                    , strategy = replacement_rule['strategy'] if 'strategy' in replacement_rule else simple_imputer_default.strategy
+                    , fill_value = replacement_rule['fill_value'] if 'fill_value' in replacement_rule else simple_imputer_default.fill_value
+                )
+                if self.verbose:
+                    print(simple_imputer)
+                self.simple_imputers[feat_with_vals_to_replace].append(simple_imputer)
+                
+                the_index = None
+                if simple_imputer.missing_values is np.nan:
+                    the_index = X[X[feat_with_vals_to_replace].isnull()==True].index
+                else:
+                    the_index = X.loc[X[feat_with_vals_to_replace]==simple_imputer.missing_values].index
+                self.columns_replacement_index_dict[feat_with_vals_to_replace].append(the_index)
+                if self.verbose:
+                    print(the_index)
 
-            if len(self.columns_replacement_index_dict[feat_with_vals_to_replace]) > 0:
-                replaced = simple_imputer.fit_transform(X_vals_replaced[[feat_with_vals_to_replace]])
-                if self.verbose:
-                    print(result)
-                X_vals_replaced[feat_with_vals_to_replace] = replaced
-                X_vals_replaced[feat_with_vals_to_replace] = X_vals_replaced[feat_with_vals_to_replace].astype(type(simple_imputer.fill_value))
-            else:
-                if self.verbose:
-                    print("missing value not found - nothing replaced")
+                if len(the_index) > 0:
+                    replaced = simple_imputer.fit_transform(X_vals_replaced[[feat_with_vals_to_replace]])
+                    # if self.verbose:
+                    #     print(replaced)
+                    X_vals_replaced[feat_with_vals_to_replace] = replaced
+                    X_vals_replaced[feat_with_vals_to_replace] = X_vals_replaced[feat_with_vals_to_replace].astype(type(simple_imputer.fill_value))
+                else:
+                    if self.verbose:
+                        print("missing value not found - nothing replaced")
             
         return X_vals_replaced
 
