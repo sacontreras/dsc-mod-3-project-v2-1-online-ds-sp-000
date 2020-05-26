@@ -131,9 +131,9 @@ def analyze_values(
         n_unique = len(unique_values)
         feats_with_unique_count[col] = (n_unique, unique_values)
 
-    cols = ['feature', 'dtype']
+    cols = ['feature', 'dtype', 'n_unique', 'unique_vals']
     if not hide_standard_cols:
-        cols.extend(['n_unique', 'n_unique_ratio', 'unique_vals', 'p_cat', 'n_null', 'n_null_ratio', 'null_index'])
+        cols.extend(['n_unique_ratio', 'p_cat', 'n_null', 'n_null_ratio', 'null_index'])
 
     compute_top = compute_top__kargs is not None and compute_top__kargs['strategy'] in ['percentile', 'literal'] and compute_top__kargs['value'] is not None
     compute_top__value = None
@@ -161,23 +161,23 @@ def analyze_values(
     feats = [t[0] for t in sorted(feats_with_unique_count.items(), key=lambda t: t[1][0])] if sort_by_unique_count else list(df.columns)
 
     for feat in feats:
+        unique_values = feats_with_unique_count[feat][1]
+        n_unique = feats_with_unique_count[feat][0]
         data = [{
             'feature': feat, 
-            'dtype': df[feat].dtypes
+            'dtype': df[feat].dtypes,
+            'n_unique': n_unique,
+            'unique_vals': unique_values
         }]
 
         if not hide_standard_cols:
-            unique_values = feats_with_unique_count[feat][1]
-            n_unique = feats_with_unique_count[feat][0]
             n_unique_ratio = n_unique/l
             p_cat = 1 - n_unique_ratio
             n_null = df[feat].isnull().sum()
             n_null_ratio = n_null/l
             p_null = 1 - n_null_ratio
             null_index = df[df[feat].isnull()==True].index if n_null > 0 else None
-            data[0]['n_unique'] = n_unique
             data[0]['n_unique_ratio'] = n_unique_ratio
-            data[0]['unique_vals'] = unique_values
             data[0]['p_cat'] = round(p_cat,4)*100
             data[0]['n_null'] = n_null
             data[0]['n_null_ratio'] = n_null_ratio
@@ -355,7 +355,6 @@ def analyze_value_detailed(df, df_name, feat, top_percentile=75, suppress_values
     
     if not suppress_output and not suppress_values:
         display(HTML("values are:"))
-    # n = 0
     for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
         if not suppress_output and not suppress_values:
             display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
@@ -587,7 +586,7 @@ def analyze_duplicates(feat_group_name, feat_group, df_name, df, max_unique_disp
     df_analysis, duplicates_entries = analyze_values(
         df[feat_group], 
         f"{df_name} <i>{feat_group_name}</i> Type", 
-        standard_options_kargs={'sort_unique_vals':True},
+        standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
         compute_duplicates__kargs={'display_heads':False}
     )
 
@@ -602,16 +601,20 @@ def analyze_categorical_reduction(
     df, 
     df_name, 
     feat, 
-    percentiles, 
+    percentiles=None, 
+    suppress_100th_percentile_display=False,
+    truncate_sig_after_n=100,
     map_to_candidates=['none','other','unknown'],
-    truncate_sig_after_n=100
+    suppress_map_to_candidates_display=False
 ):
     display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
 
-    final_percentiles = [100]
-    final_percentiles.extend(percentiles)
-
     result_by_percentile = {}
+
+    final_percentiles = [100]
+
+    if percentiles is not None:
+        final_percentiles.extend(percentiles)
 
     for i_p, percentile in enumerate(final_percentiles):
         display(HTML(f"<h5>PERCENTILE: {percentile}</h5>"))
@@ -624,11 +627,12 @@ def analyze_categorical_reduction(
         all_unique = df[feat].unique()
         n_all_unique = len(all_unique)
 
-        fs = (20,10)
-        width = 1
-        fig = plt.figure(figsize=fs)
-        ax = plt.gca()
-        rects = ax.patches
+        if percentile != 100 or not suppress_100th_percentile_display:
+            fs = (20,10)
+            width = 1
+            fig = plt.figure(figsize=fs)
+            ax = plt.gca()
+            rects = ax.patches
 
         bar_label_voffset = .0375
         sig_alpha = 0.4
@@ -645,7 +649,7 @@ def analyze_categorical_reduction(
 
         densities = [sig_cat[1][1] for sig_cat in sig_cats]
         counts = [sig_cat[1][0] for sig_cat in sig_cats]
-        labels = [sig_cat[0] for sig_cat in sig_cats]
+        labels = [str(sig_cat[0]) for sig_cat in sig_cats]
         pop_rep = sum(densities)
         pop_rep_count = sum(counts)
 
@@ -656,43 +660,45 @@ def analyze_categorical_reduction(
             d_pop_rep.extend([1-pop_rep])
             d_pop_rep_labels.extend([f'** INSIGNIFICANT ({n_all_unique-len(many_categories_val_count_top_percent)} categories) **'])
             colors.extend(['red'])
-        plt.bar(d_pop_rep_labels, d_pop_rep, width=width, color=colors)
-        # top label for grouping of significant (based on percentile)
-        ax.text(
-            (rects[-2].get_x()-rects[0].get_x())/2, 
-            pop_rep+bar_label_voffset,
-            f"{round(pop_rep*100,4)}% ({len(many_categories_val_count_top_percent)} SIGNIFICANT categories in {pop_rep_count} observations)",
-            ha='center', 
-            weight='bold'
-        )
-        # annotation for insignificant (based on percentile)
-        if len(many_categories_val_count_top_percent) < n_all_unique:
+
+        if percentile != 100 or not suppress_100th_percentile_display:
+            plt.bar(d_pop_rep_labels, d_pop_rep, width=width, color=colors)
+            # top label for grouping of significant (based on percentile)
             ax.text(
-                rects[-1].get_x()+rects[-1].get_width()/2, 
-                d_pop_rep[-1]+bar_label_voffset,
-                f"{round(d_pop_rep[-1]*100,4)}% ({len(df)-pop_rep_count} observations)",
+                (rects[-2].get_x()-rects[0].get_x())/2, 
+                pop_rep+bar_label_voffset,
+                f"{round(pop_rep*100,4)}% ({len(many_categories_val_count_top_percent)} {'SIGNIFICANT ' if percentile != 100 else ''}categories in {pop_rep_count} observations)",
                 ha='center', 
-                rotation=90,
                 weight='bold'
             )
+            # annotation for insignificant (based on percentile)
+            if len(many_categories_val_count_top_percent) < n_all_unique:
+                ax.text(
+                    rects[-1].get_x()+rects[-1].get_width()/2, 
+                    d_pop_rep[-1]+bar_label_voffset,
+                    f"{round(d_pop_rep[-1]*100,4)}% ({len(df)-pop_rep_count} observations)",
+                    ha='center', 
+                    rotation=90,
+                    weight='bold'
+                )
 
-        plt.bar(labels, densities, width=width, color='blue')
-        # annotation for significant (based on percentile)
-        for i_r_d, (rect, d) in enumerate(zip(rects, densities)):
-            ax.text(
-                rect.get_x()+rect.get_width()/2, 
-                d+bar_label_voffset,
-                f"{round(d*100,4)}% ({counts[i_r_d]} observations)",
-                ha='center', 
-                rotation=90,
-                weight='bold'
-            )
+            plt.bar(labels, densities, width=width, color='blue')
+            # annotation for significant (based on percentile)
+            for i_r_d, (rect, d) in enumerate(zip(rects, densities)):
+                ax.text(
+                    rect.get_x()+rect.get_width()/2, 
+                    d+bar_label_voffset,
+                    f"{round(d*100,4)}% ({counts[i_r_d]} observations)",
+                    ha='center', 
+                    rotation=90,
+                    weight='bold'
+                )
 
-        ax.set_ybound(upper=pop_rep, lower=0)
+            ax.set_ybound(upper=pop_rep, lower=0)
 
-        plt.xticks(rotation=90)
+            plt.xticks(rotation=90)
 
-        plt.show()
+            plt.show()
 
         percentile_entry = {}
 
@@ -703,9 +709,11 @@ def analyze_categorical_reduction(
 
         for candidate_map_to_category in map_to_candidates:
             sig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in many_categories_val_count_top_percent.keys()
-            display(HTML(f"{helper__HTML_tabs(1)}categories {'of top '+str(percentile)+'%' if percentile!=100 else ''} of '{feat}' contain '{candidate_map_to_category}'? {sig_contains_candidate_map_to_category[candidate_map_to_category]}"))
+            if not suppress_map_to_candidates_display and percentile < 100:
+                display(HTML(f"{helper__HTML_tabs(1)}categories {'of top '+str(percentile)+'%' if percentile!=100 else ''} of '{feat}' contain '{candidate_map_to_category}'? {sig_contains_candidate_map_to_category[candidate_map_to_category]}"))
             insig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in insig_percentile_entry_categories
-            display(HTML(f"{helper__HTML_tabs(1)}insignificant categories of '{feat}' contain '{candidate_map_to_category}'? {insig_contains_candidate_map_to_category[candidate_map_to_category]}"))
+            if not suppress_map_to_candidates_display and percentile < 100:
+                display(HTML(f"{helper__HTML_tabs(1)}insignificant categories of '{feat}' contain '{candidate_map_to_category}'? {insig_contains_candidate_map_to_category[candidate_map_to_category]}"))
 
         percentile_entry['sig'] = (list(many_categories_val_count_top_percent.keys()), many_categories_top_percent_index, sig_contains_candidate_map_to_category)
         percentile_entry['insig'] = (insig_percentile_entry_categories, insig_percentile_entry_index, insig_contains_candidate_map_to_category)
@@ -718,3 +726,18 @@ def analyze_categorical_reduction(
     display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
 
     return result_by_percentile
+
+def helper__summarize_categorical_reduction(result, feat, sig, map_to):
+    n_unique_before = len(result[100]['sig'][0])
+    n_sig_unique_after = len(result[sig]['sig'][0])
+    n_sig_after = len(result[sig]['sig'][1])
+    n_insig_unique_after = len(result[sig]['insig'][0])
+    n_insig_after = len(result[sig]['insig'][1])
+    insig_map_to_categories_occurence_after = result[sig]['insig'][2]
+
+    
+
+    display(HTML(f"There are {n_insig_unique_after} unique categories in {n_insig_after} INSIGNIFICANT (bottom {100-sig}%) <b>{feat}</b> observations."))
+    display(HTML(f"Occurrence of candidate-map-to-categories in these INSIGNIFICANT categories is as follows: {insig_map_to_categories_occurence_after}."))
+    display(HTML(f"<br>By selecting categories from the top {sig}% (by count) of feature <b>{feat}</b>, we reduce the magnitude of the set of unique categories from {n_unique_before} to {n_sig_unique_after} (a {round(abs(1 - 1/(n_sig_unique_after/n_unique_before))*100,2)}% reduction in size!).  This will yield a significant reduction of One-Hot Encoded column explosion and, consequently, a significant performance gain when building classification models."))
+    display(HTML(f"<br><br>We will map these \"insignificant\" {n_insig_unique_after} categories ({n_insig_after} observations) to \"{map_to}\"."))
