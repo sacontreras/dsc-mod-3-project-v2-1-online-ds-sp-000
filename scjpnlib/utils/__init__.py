@@ -735,8 +735,6 @@ def helper__summarize_categorical_reduction(result, feat, sig, map_to):
     n_insig_after = len(result[sig]['insig'][1])
     insig_map_to_categories_occurence_after = result[sig]['insig'][2]
 
-    
-
     display(HTML(f"There are {n_insig_unique_after} unique categories in {n_insig_after} INSIGNIFICANT (bottom {100-sig}%) <b>{feat}</b> observations."))
     display(HTML(f"Occurrence of candidate-map-to-categories in these INSIGNIFICANT categories is as follows: {insig_map_to_categories_occurence_after}."))
     display(HTML(f"<br>By selecting categories from the top {sig}% (by count) of feature <b>{feat}</b>, we reduce the magnitude of the set of unique categories from {n_unique_before} to {n_sig_unique_after} (a {round(abs(1 - 1/(n_sig_unique_after/n_unique_before))*100,2)}% reduction in size!).  This will yield a significant reduction of One-Hot Encoded column explosion and, consequently, a significant performance gain when building classification models."))
