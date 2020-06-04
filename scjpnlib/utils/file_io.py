@@ -4,6 +4,8 @@ from pathlib import Path
 import urllib
 from tqdm import tqdm
 import numpy as np
+import json
+from json_minify import json_minify
 
 class FileManager:
     def __init__(self):
@@ -50,3 +52,10 @@ class FileManager:
                     if self.download(url, local_file) != 0:
                         break
             display(HTML(f"Required download-file {local_file} exists locally."))
+
+    def load_json(self, f_name):
+        with open(f_name, 'r') as f:
+            _raw = f.read()
+        json_object = json.loads(json_minify(_raw)) # minify is used so that we can place comments/documentation in the JSON config file (which is normally invalid in JSON)
+        f.close()
+        return json_object

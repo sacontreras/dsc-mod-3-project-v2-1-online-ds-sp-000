@@ -133,7 +133,7 @@ class SimpleValueTransformer(object):
                 else:
                     if self.verbose:
                         print("missing value not found - nothing replaced")
-            
+             
         return X_vals_replaced
 
     def fit_transform(self, X, y=None): # nothing will be done to y

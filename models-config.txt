@@ -1,0 +1,230 @@
+{
+    //the random_state seed used throughout the project
+    "SEED": 42,
+
+    "RandomForestClassifier": {
+        "trials": {
+            "run": false,
+
+            "array": [
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "bootstrap": [true, false], 
+                            "criterion": ["entropy", "gini"], 
+                            "max_features": ["auto", "sqrt", "log2"], 
+                            "max_depth": [10, 50, 75, null], 
+                            "n_estimators": [100, 500, 1000]
+                        },
+
+                        //don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        "last_best": {
+                            "bootstrap": true,
+                            "criterion": "entropy",
+                            "max_depth": 75,
+                            "max_features": "auto",
+                            "n_estimators": 1000
+                        }
+                    }
+                }
+            ]
+        },
+
+        //these will be used when trials['run']==false
+        "params": {
+            "bootstrap": true,
+            "criterion": "entropy",
+            "max_depth": 75,
+            "max_features": "auto",
+            "n_estimators": 1000
+        }
+    },
+
+    "XGBClassifier": {
+        "trials": {
+            "run": false,
+
+            // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
+            "array": [
+
+                // gamma tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "learning_rate": [0.1],
+                            "max_depth": [3],
+                            "min_child_weight": [1],
+                            "subsample": [1],
+
+                            // this is the param we are twiddling in this trial
+                            "gamma": [0, 1, 2, 5, 10],
+
+                            "n_estimators": [100]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.1,
+                            "max_depth": 3,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                },
+
+                // learning_rate tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            // this is the param we are twiddling in this trial
+                            "learning_rate": [0.1, 0.3, 0.6, 1.0],
+
+                            "max_depth": [3],
+                            "min_child_weight": [1],
+                            "subsample": [1],
+                            "gamma": [1],
+                            "n_estimators": [100]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.3,
+                            "max_depth": 3,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                },
+
+                // max_depth tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "learning_rate": [0.3],
+
+                            // this is the param we are twiddling in this trial
+                            "max_depth": [3, 5, 10, 25, 50],
+
+                            "min_child_weight": [1],
+                            "subsample": [1],
+                            "gamma": [1],
+                            "n_estimators": [100]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.3,
+                            "max_depth": 10,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                },
+
+                // min_child_weight tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "learning_rate": [0.3],
+                            "max_depth": [10],
+
+                            // this is the param we are twiddling in this trial
+                            "min_child_weight": [1, 3, 5],
+
+                            "subsample": [1],
+                            "gamma": [1],
+                            "n_estimators": [100]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.3,
+                            "max_depth": 10,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                },
+
+                // subsample tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "learning_rate": [0.3],
+                            "max_depth": [10],
+                            "min_child_weight": [1],
+
+                            // this is the param we are twiddling in this trial
+                            "subsample": [0.1, 0.25, 0.5, 1.0],
+
+                            "gamma": [1],
+                            "n_estimators": [100]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.3,
+                            "max_depth": 10,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                },
+
+                // n_estimators tuning
+                {
+                    "gridsearch": {
+                        "run": false,
+
+                        "param_grid": {
+                            "learning_rate": [0.3],
+                            "max_depth": [10],
+                            "min_child_weight": [1],
+                            "subsample": [1.0],
+                            "gamma": [1],
+
+                            // this is the param we are twiddling in this trial
+                            "n_estimators": [100, 500, 750, 1000]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.3,
+                            "max_depth": 10,
+                            "min_child_weight": 1,
+                            "subsample": 1,
+                            "gamma": 1,
+                            "n_estimators": 100
+                        }
+                    }
+                }
+            ]
+        },
+
+        //these will be used when trials['run']==false
+        "params": {
+            "learning_rate": 0.3,
+            "max_depth": 10,
+            "min_child_weight": 1,
+            "subsample": 1,
+            "gamma": 1,
+            "n_estimators": 100
+        }
+    }
+}

@@ -9,6 +9,12 @@ import itertools as it
 from .skl_transformers import SimpleValueTransformer
 import scipy.stats as st
 import math
+from itertools import combinations
+import json
+import hashlib
+
+
+
 
 def yes_no_prompt(prompt):
     display(HTML("<h3>{}</h3>".format(prompt)))
@@ -275,11 +281,77 @@ def helper__display_complement_from_duplicates_entries(duplicates_entries, df_co
         display(HTML(f"<p><br>"))
 
 def get_outliers(df, feat, iqr_factor=1.5):
-    q1, q3 = np.percentile(df.sort_values(by=feat)[feat], [25, 75])
+    q1, q3 = np.nanpercentile(df.sort_values(by=feat)[feat], [25, 75])
     delta = q3 - q1
     iqr_q_lb = q1 - (iqr_factor * delta) 
     iqr_q_ub = q3 + (iqr_factor * delta)
     return (df.query(f"{feat}<{iqr_q_lb} or {feat}>{iqr_q_ub}").index, iqr_q_lb, iqr_q_ub, q1, q3, iqr_factor)
+    # print(f"get_outliers('{feat}'): iqr_q_lb=={iqr_q_lb}, iqr_q_ub=={iqr_q_ub}")
+    # return (df.query(f"{feat}.notnull() and ({feat}<{iqr_q_lb} or {feat}>{iqr_q_ub})", engine='python').index, iqr_q_lb, iqr_q_ub, q1, q3, iqr_factor)
+
+
+def analyze_value_detailed(df, df_name, feat, top_percentile=75, suppress_values=False, suppress_output=False):
+    l = len(df)
+    df_analysis, _ = analyze_values(
+        df[[feat]], 
+        f"{df_name} <i>{feat}</i> Detailed Value Analysis", 
+        standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
+        compute_top__kargs={'strategy':'percentile', 'value':top_percentile},
+        suppress_output=True
+    )
+    df_feat_value_analysis = df_analysis.loc[df_analysis['feature']==feat]
+    unique_vals = df[feat].unique()
+    n_unique = len(unique_vals)
+    n_unique_top_percentile = df_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
+    n_pop_rep = df_analysis['n_pop_rep'].values[0]
+    n_top_percentile = df_analysis[f'n_top_{top_percentile}_percent'].values[0]
+    index_top_percentile = df_analysis[f'index_top_{top_percentile}_percent'].values[0]
+    val_count_top_percentile = df_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
+
+    reduction = abs(1 - 1/(n_unique_top_percentile/n_unique))
+
+    if not suppress_output:
+        display(HTML(f"<b>{n_unique_top_percentile} unique value(s)</b> (out of {n_unique} unique, categories-magnitude reduction: {round(reduction*100,2)}%) of <b><i>{feat}</i> constitute <u>{round(n_pop_rep*100,4)}%</u> of the total number of observations</b> ({n_top_percentile} out of {l})"))
+    
+    if not suppress_output and not suppress_values:
+        display(HTML("values are:"))
+    for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
+        if not suppress_output and not suppress_values:
+            display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
+
+    return index_top_percentile, val_count_top_percentile, reduction
+
+def analyze_value_detailed__top_n(df, df_name, feat, top_n, suppress_values=False, suppress_output=False):
+    l = len(df)
+    df_analysis, _ = analyze_values(
+        df[[feat]], 
+        f"{df_name} <i>{feat}</i> Detailed Value Analysis", 
+        standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
+        compute_top__kargs={'strategy':'literal', 'value':top_n},
+        suppress_output=True
+    )
+    df_feat_value_analysis = df_analysis.loc[df_analysis['feature']==feat]
+    suffix = f"top_{top_n}"
+    unique_vals = df[feat].unique()
+    n_unique = len(unique_vals)
+    n_unique_top_n= df_analysis[f'n_unique_{suffix}'].values[0]
+    n_pop_rep = df_analysis['n_pop_rep'].values[0]
+    n_top_percentile = df_analysis[f'n_{suffix}'].values[0]
+    index_top_n = df_analysis[f'index_{suffix}'].values[0]
+    val_count_top_n = df_analysis[f'val_count_{suffix}'].values[0]
+
+    reduction = abs(1 - 1/(n_unique_top_n/n_unique))
+
+    if not suppress_output:
+        display(HTML(f"<b>{n_unique_top_n} unique value(s)</b> (out of {n_unique} unique, categories-magnitude reduction: {round(reduction*100,2)}%) of <b><i>{feat}</i> constitute <u>{round(n_pop_rep*100,4)}%</u> of the total number of observations</b> ({n_top_percentile} out of {l})"))
+    
+    if not suppress_output and not suppress_values:
+        display(HTML("values are:"))
+    for val, val_count_data in val_count_top_n.items(): # yields: val, (count, ratio-of-population)
+        if not suppress_output and not suppress_values:
+            display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_n)>1 else ''}"))
+
+    return index_top_n, val_count_top_n, reduction
 
 
 def analyze_outliers(df, df_name, iqr_factor=1.5, feats=None, display_plots=True, plot_edge=2, suppress_output=False):
@@ -321,7 +393,8 @@ def analyze_outliers(df, df_name, iqr_factor=1.5, feats=None, display_plots=True
                 ax = fig.add_subplot(r_n, c_n, idx+1)
                 df[[feat]].boxplot()
         else:
-            display(HTML(f"<h4>*** WARNING: outlier analysis is not applicable for <i>{feat}</i> since it is not numeric ({df[feat].dtype}) ***</h4>"))
+            if not suppress_output:
+                display(HTML(f"<h4>*** WARNING: outlier analysis is not applicable for <i>{feat}</i> since it is not numeric ({df[feat].dtype}) ***</h4>"))
 
     if display_plots and not suppress_output:
         fig.tight_layout()
@@ -330,69 +403,46 @@ def analyze_outliers(df, df_name, iqr_factor=1.5, feats=None, display_plots=True
     return df_outlier_analysis
 
 
-def analyze_value_detailed(df, df_name, feat, top_percentile=75, suppress_values=False, suppress_output=False):
-    l = len(df)
-    df_analysis, _ = analyze_values(
-        df[[feat]], 
-        f"{df_name} <i>{feat}</i> Detailed Value Analysis", 
-        standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
-        compute_top__kargs={'strategy':'percentile', 'value':top_percentile},
-        suppress_output=True
-    )
-    df_feat_value_analysis = df_analysis.loc[df_analysis['feature']==feat]
-    unique_vals = df[feat].unique()
-    n_unique = len(unique_vals)
-    n_unique_top_percentile = df_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
-    n_pop_rep = df_analysis['n_pop_rep'].values[0]
-    n_top_percentile = df_analysis[f'n_top_{top_percentile}_percent'].values[0]
-    index_top_percentile = df_analysis[f'index_top_{top_percentile}_percent'].values[0]
-    val_count_top_percentile = df_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
+def replace_outliers_index(df, feat, outliers_index, map_to_value):
+    df_outliers = df.loc[outliers_index]
+    unique_outlier_vals = df_outliers[feat].unique()
 
-    reduction = abs(1 - 1/(n_unique_top_percentile/n_unique))
+    replace_feat_outlier_rules = []
+    for unique_outlier_val in unique_outlier_vals:
+        replace_feat_outlier_rules.append({
+            'missing_values': unique_outlier_val,
+            'strategy': 'constant', 
+            'fill_value': map_to_value
+        })
+    replace_outliers_rules = {feat: replace_feat_outlier_rules}
+    svt_outliers = SimpleValueTransformer(replace_outliers_rules)
+    df_outliers_replaced_by_index = svt_outliers.fit_transform(df_outliers) # apply only to outliers so we don't have to deal with nans
+    df_outliers_replaced = df.copy()
+    df_outliers_replaced.loc[df_outliers_replaced_by_index.index] = df_outliers_replaced_by_index
 
-    if not suppress_output:
-        display(HTML(f"<b>{n_unique_top_percentile} unique value(s)</b> (out of {n_unique} unique, categories-magnitude reduction: {round(reduction*100,2)}%) of <b><i>{feat}</i> constitute <u>{round(n_pop_rep*100,4)}%</u> of the total number of observations</b> ({n_top_percentile} out of {l})"))
-    
-    if not suppress_output and not suppress_values:
-        display(HTML("values are:"))
-    for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
-        if not suppress_output and not suppress_values:
-            display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
+    return (df_outliers_replaced, replace_outliers_rules)
 
-    return index_top_percentile, val_count_top_percentile, reduction
+def replace_outliers(df, feat, map_to_value):
+    df_outliers = analyze_outliers(df[[feat]], "", display_plots=False, suppress_output=True)
+    df_feat_outlier_analysis = df_outliers.loc[df_outliers['feature']==feat]
+    outliers_index = df_feat_outlier_analysis['outliers_index'].values[0]
+    return replace_outliers_index(df, feat, outliers_index, map_to_value)[0]
 
+def impute_TO_nan(df, feat, val_to_replace_with_nan):
+    df_feat_val_as_nan = df.copy()
+    df_feat_val_as_nan[feat] = df_feat_val_as_nan[feat].replace(val_to_replace_with_nan, np.NaN)
+    return df_feat_val_as_nan
 
-def reduce_unique(df, df_name, feat, target_n, suppress_values=False):
-    l = len(df)
-    starting_unique_vals = df[feat].unique()
-    n_unique = len(starting_unique_vals)
-    n_unique_top_percentile = n_unique
-    actual_percentile = 0
-    top_percentile = 100
-
-    display(HTML(f"Attempting to reduce unique {feat} values in {df_name} to a flat count of {target_n} members..."))
-
-    # stopping condition: n_unique < 
-    while n_unique > 1 and n_unique_top_percentile > target_n and top_percentile > 0:
-        df_analysis, _ = analyze_values(
-            df[[feat]], 
-            f"{df_name} <i>{feat}</i> Detailed Value Analysis", 
-            standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
-            compute_top__kargs={'strategy':'percentile', 'value':top_percentile},
-            suppress_output=True
-        )
-        df_feat_value_analysis = df_analysis.loc[df_analysis['feature']==feat]
-        n_unique_top_percentile = df_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
-        actual_percentile = df_analysis['n_pop_rep'].values[0]*100
-        n_top_percentile = df_analysis[f'n_top_{top_percentile}_percent'].values[0]
-        val_count_top_percentile = df_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
-
-        top_percentile -= 1
-
-    display(HTML(f"{helper__HTML_tabs(1)}FOUND: <b>{n_unique_top_percentile} unique value(s)</b> (out of {n_unique} unique) <b>of <i>{feat}</i> constitute <u>{round(actual_percentile,2)}%</u> of the total number of observations</b> ({n_top_percentile} out of {l})"))
-
-
-def analyze_outliers_detailed(df, df_name, feat, top_percentile=75, outlier_ratio_reduction_threshold=.10):
+def analyze_outliers_detailed(
+    df, 
+    df_name, 
+    feat, 
+    top_percentile=75, 
+    outlier_ratio_reduction_threshold=.10,
+    suppress_replacement_strat_analysis=False,
+    suppress_values_display=True,
+    suppress_candidate_head=True
+):
     l = len(df)
     df_analysis, _ = analyze_values(
         df[[feat]], 
@@ -405,7 +455,8 @@ def analyze_outliers_detailed(df, df_name, feat, top_percentile=75, outlier_rati
     unique_vals = df[feat].unique()
     n_unique = len(unique_vals)
 
-    df_outliers = analyze_outliers(df, df_name, display_plots=False, suppress_output=True)
+    # df_outliers = analyze_outliers(df, df_name, display_plots=False, suppress_output=True)
+    df_outliers = analyze_outliers(df[[feat]], f"{df_name} <i>{feat}</i>",  plot_edge=3)
     df_feat_outlier_analysis = df_outliers.loc[df_outliers['feature']==feat]
     
     q1 = df_feat_outlier_analysis['q1'].values[0]
@@ -417,10 +468,10 @@ def analyze_outliers_detailed(df, df_name, feat, top_percentile=75, outlier_rati
     unique_outlier_vals = df_outliers[feat].unique()
     n_unique_outlier_vals = len(unique_outlier_vals)
 
-    n_unique_top_75_percent = df_feat_value_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
+    n_unique_top_percentile = df_feat_value_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
     n_pop_rep = df_feat_value_analysis['n_pop_rep'].values[0]
-    n_top_75_percent = df_feat_value_analysis[f'n_top_{top_percentile}_percent'].values[0]
-    val_count_top_75_percent = df_feat_value_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
+    n_top_percentile = df_feat_value_analysis[f'n_top_{top_percentile}_percent'].values[0]
+    val_count_top_percentile = df_feat_value_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
 
     display(HTML(f"q1 of <b>{feat}</b> is: {q1}"))
     display(HTML(f"q3 of <b>{feat}</b> is: {q3}"))
@@ -429,121 +480,119 @@ def analyze_outliers_detailed(df, df_name, feat, top_percentile=75, outlier_rati
     display(HTML(f"count of UNIQUE <b>{feat}</b> outlier values is: {n_unique_outlier_vals} (out of {n_unique} unique values)"))
 
     display(HTML("<br>"))
-    display(HTML(f"{n_unique_top_75_percent} value(s) (out of {n_unique} unique) of <b>{feat}</b> constitute {round(n_pop_rep*100,2)}% of the total number of observations ({n_top_75_percent} out of {l})"))
-    display(HTML("values are:"))
-    top_75_percent = []
-    for val, val_count_data in val_count_top_75_percent.items(): # yields: val, (count, ratio-of-population)
-        top_75_percent.append(val)
-        display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_75_percent)>1 else ''}"))
-    display(HTML(f"mean of those values: {np.mean(top_75_percent)}"))
+    display(HTML(f"{n_unique_top_percentile} value(s) (out of {n_unique} unique) of <b>{feat}</b> constitute {round(n_pop_rep*100,2)}% of the total number of observations ({n_top_percentile} out of {l})"))
+    if not suppress_values_display:
+        display(HTML("values are:"))
+    top_percentile_vals = []
+    for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
+        top_percentile_vals.append(val)
+        if not suppress_values_display:
+            display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
+    display(HTML(f"mean of top {top_percentile}th percentile values: {np.mean(top_percentile_vals)}"))
+    display(HTML(f"median of top {top_percentile}th percentile values: {np.median(top_percentile_vals)}"))
+    display(HTML(f"mode of top {top_percentile}th percentile values: {top_percentile_vals[0]}"))
 
-    best_improvement_strategy = None
+    best_improvement_strategy = (None, n_outliers, 0)
     best_replace_outliers_rules = None
+    all_replace_outliers_rules = {}
 
     # consider replacment with mean
     mean_feat = df[feat].mean()
-    display(HTML("<br><br><br>"))
-    display(HTML(f"mean of <b>{feat}</b> is: {mean_feat}"))
-    replace_feat_outlier_rules = []
-    for unique_outlier_val in unique_outlier_vals:
-        replace_feat_outlier_rules.append({
-            'missing_values': unique_outlier_val,
-            'strategy': 'constant', 
-            'fill_value': mean_feat
-        })
-    replace_outliers_rules = {feat: replace_feat_outlier_rules}
-    svt_outliers = SimpleValueTransformer(replace_outliers_rules)
-    df_outlier_replacement_candidate = svt_outliers.fit_transform(df)
-    df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mean: {mean_feat}) Candidate', display_plots=True, plot_edge=3)
-    display(HTML(df_outliers_analysis.to_html(notebook=True)))
-    n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
-    n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
-    n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
-    s_fail_reason = ""
-    b_fewer_outliers = n_new_outliers < n_outliers
-    s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
-    b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
-    s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
-    b_gt_one_val = n_new_unique_vals > 1
-    s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
-    if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
-        best_improvement_strategy = 'mean'
-        best_replace_outliers_rules = replace_outliers_rules
-    display(HTML(f"<h4>replacing outliers with <u>mean</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy=='mean' else s_fail_reason}</h4>"))
+    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else '<br>'}"))
+    display(HTML(f"mean of all <b>{feat}</b> values is: {mean_feat}"))
+    if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
+        df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, mean_feat)
+        all_replace_outliers_rules['mean'] = replace_outliers_rules
+
+        if not suppress_candidate_head:
+            display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
+            display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
+
+        df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mean: {mean_feat}) Candidate', display_plots=True, plot_edge=3)
+        display(HTML(df_outliers_analysis.to_html(notebook=True)))
+        n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
+        n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
+        n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
+        s_fail_reason = ""
+        b_fewer_outliers = n_new_outliers < best_improvement_strategy[1]
+        s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
+        b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
+        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
+        b_gt_one_val = n_new_unique_vals > 1
+        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
+        if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
+            best_improvement_strategy = ('mean', n_new_outliers, n_new_outliers_ratio)
+            best_replace_outliers_rules = replace_outliers_rules
+        display(HTML(f"<h4>replacing outliers with <u>mean</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mean' else s_fail_reason}</h4>"))
 
     # consider replacment with median
     median_feat = df[feat].median()
-    display(HTML("<br><br><br>"))
-    display(HTML(f"median of <b>{feat}</b> is: {median_feat}"))
-    if median_feat != mean_feat:
-        replace_feat_outlier_rules = []
-        for unique_outlier_val in unique_outlier_vals:
-            replace_feat_outlier_rules.append({
-                'missing_values': unique_outlier_val,
-                'strategy': 'constant', 
-                'fill_value': median_feat
-            })
-        replace_outliers_rules = {feat: replace_feat_outlier_rules}
-        svt_outliers = SimpleValueTransformer(replace_outliers_rules)
-        df_outlier_replacement_candidate = svt_outliers.fit_transform(df)
-        df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with median: {median_feat}) Candidate', display_plots=True, plot_edge=3)
-        display(HTML(df_outliers_analysis.to_html(notebook=True)))
-        n_new_outliers_prior = n_new_outliers
-        n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
-        n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
-        n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
-        s_fail_reason = ""
-        b_fewer_outliers = n_new_outliers < n_outliers and n_new_outliers < n_new_outliers_prior
-        s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
-        b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
-        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
-        b_gt_one_val = n_new_unique_vals > 1
-        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
-        if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
-            best_improvement_strategy = 'median'
-            best_replace_outliers_rules = replace_outliers_rules
-        display(HTML(f"<h4>replacing outliers with <u>median</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy=='median' else s_fail_reason}</h4>"))
-    else:
-        display(HTML("(the particular-value replacement scheme was already considered above)"))
+    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
+    display(HTML(f"median of all <b>{feat}</b> values is: {median_feat}"))
+    if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
+        if median_feat != mean_feat:
+            df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, median_feat)
+            all_replace_outliers_rules['median'] = replace_outliers_rules
 
-    # consider replacment with median
+            if not suppress_candidate_head:
+                display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
+                display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
+
+            df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with median: {median_feat}) Candidate', display_plots=True, plot_edge=3)
+            display(HTML(df_outliers_analysis.to_html(notebook=True)))
+            n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
+            n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
+            n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
+            s_fail_reason = ""
+            b_fewer_outliers = n_new_outliers < best_improvement_strategy[1]
+            s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
+            b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
+            s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
+            b_gt_one_val = n_new_unique_vals > 1
+            s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
+            if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
+                best_improvement_strategy = ('median', n_new_outliers, n_new_outliers_ratio)
+                best_replace_outliers_rules = replace_outliers_rules
+            display(HTML(f"<h4>replacing outliers with <u>median</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='median' else s_fail_reason}</h4>"))
+        else:
+            display(HTML("(the particular-value replacement scheme was already considered above)"))
+
+    # consider replacment with mode
     mode_feat = df.mode(numeric_only=True)[feat].values[0]
-    display(HTML("<br><br><br>"))
-    display(HTML(f"mode of <b>{feat}</b> is: {mode_feat}"))
-    if mode_feat != median_feat:
-        replace_feat_outlier_rules = []
-        for unique_outlier_val in unique_outlier_vals:
-            replace_feat_outlier_rules.append({
-                'missing_values': unique_outlier_val,
-                'strategy': 'constant', 
-                'fill_value': mode_feat
-            })
-        replace_outliers_rules = {feat: replace_feat_outlier_rules}
-        svt_outliers = SimpleValueTransformer(replace_outliers_rules)
-        df_outlier_replacement_candidate = svt_outliers.fit_transform(df)
-        df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mode: {mode_feat}) Candidate', display_plots=True, plot_edge=3)
-        display(HTML(df_outliers_analysis.to_html(notebook=True)))
-        n_new_outliers_prior = n_new_outliers
-        n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
-        n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
-        n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
-        s_fail_reason = ""
-        b_fewer_outliers = n_new_outliers < n_outliers and n_new_outliers < n_new_outliers_prior
-        s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
-        b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
-        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
-        b_gt_one_val = n_new_unique_vals > 1
-        s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
-        if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
-            best_improvement_strategy = 'mode'
-            best_replace_outliers_rules = replace_outliers_rules
-        display(HTML(f"<h4>replacing outliers with <u>mode</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy=='mode' else s_fail_reason}</h4>"))
-    else:
-        display(HTML("(the particular-value replacement scheme was already considered above)"))
+    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
+    display(HTML(f"mode of all <b>{feat}</b> values is: {mode_feat}"))
+    if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
+        if mode_feat != median_feat:
+            df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, mode_feat)
+            all_replace_outliers_rules['mode'] = replace_outliers_rules
 
-    display(HTML(f"<br><h3>outlier-analysis recommendation: <b>{'replace <i>'+feat+'</i> outlier values with <u>'+best_improvement_strategy+'</u>' if best_improvement_strategy is not None else 'drop this feature'}</b></h3>"))
+            if not suppress_candidate_head:
+                display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
+                display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
 
-    return best_replace_outliers_rules
+            df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mode: {mode_feat}) Candidate', display_plots=True, plot_edge=3)
+            display(HTML(df_outliers_analysis.to_html(notebook=True)))
+            n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
+            n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
+            n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
+            s_fail_reason = ""
+            b_fewer_outliers = n_new_outliers < best_improvement_strategy[1]
+            s_fail_reason += "will not result in fewer outliers" if not b_fewer_outliers else ""
+            b_lt_reduc_ratio = n_new_outliers_ratio < outlier_ratio_reduction_threshold
+            s_fail_reason += (", " if len(s_fail_reason)>0 else "") + f"will not result in outlier ratio less than max threshold ({outlier_ratio_reduction_threshold})" if not b_lt_reduc_ratio else ""
+            b_gt_one_val = n_new_unique_vals > 1
+            s_fail_reason += (", " if len(s_fail_reason)>0 else "") + "will reduce to only one unique value" if not b_gt_one_val else ""
+            if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
+                best_improvement_strategy = ('mode', n_new_outliers, n_new_outliers_ratio)
+                best_replace_outliers_rules = replace_outliers_rules
+            display(HTML(f"<h4>replacing outliers with <u>mode</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mode' else s_fail_reason}</h4>"))
+        else:
+            display(HTML("(the particular-value replacement scheme was already considered above)"))
+
+    if n_unique_outlier_vals > 0:
+        display(HTML(f"<br><h3>outlier-analysis recommendation: <b>{'replace <i>'+feat+'</i> outlier values with <u>'+best_improvement_strategy[0]+'</u>' if best_improvement_strategy[0] is not None else 'drop this feature'}</b></h3>"))
+
+    return outliers_index, best_replace_outliers_rules, all_replace_outliers_rules
 
 
 def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50):
@@ -605,9 +654,11 @@ def analyze_categorical_reduction(
     suppress_100th_percentile_display=False,
     truncate_sig_after_n=100,
     map_to_candidates=['none','other','unknown'],
-    suppress_map_to_candidates_display=False
+    suppress_map_to_candidates_display=False,
+    suppress_output=False
 ):
-    display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
+    if not suppress_output:
+        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
 
     result_by_percentile = {}
 
@@ -617,20 +668,30 @@ def analyze_categorical_reduction(
         final_percentiles.extend(percentiles)
 
     for i_p, percentile in enumerate(final_percentiles):
-        display(HTML(f"<h5>PERCENTILE: {percentile}</h5>"))
+        if (percentile!=100 or not suppress_100th_percentile_display) and not suppress_output:
+            display(HTML(f"<h5>PERCENTILE: {percentile}</h5>"))
+
         (
             many_categories_top_percent_index, 
             many_categories_val_count_top_percent,
             reduction
-        ) = analyze_value_detailed(df, df_name, feat, top_percentile=percentile, suppress_values=True, suppress_output=percentile==100)
+        ) = analyze_value_detailed(
+            df, 
+            df_name, 
+            feat, 
+            top_percentile=percentile, 
+            suppress_values=True, 
+            suppress_output=(percentile==100 or not suppress_100th_percentile_display) and not suppress_output
+        )
 
         all_unique = df[feat].unique()
         n_all_unique = len(all_unique)
 
-        if percentile != 100 or not suppress_100th_percentile_display:
+        if (percentile != 100 or not suppress_100th_percentile_display) and not suppress_output:
             fs = (20,10)
             width = 1
             fig = plt.figure(figsize=fs)
+            plt.title(f"{n_all_unique} TOTAL unique " + r"$\bf{" + feat + "}$" + f" categories in {len(df)} observations", y=1.08)
             ax = plt.gca()
             rects = ax.patches
 
@@ -661,7 +722,7 @@ def analyze_categorical_reduction(
             d_pop_rep_labels.extend([f'** INSIGNIFICANT ({n_all_unique-len(many_categories_val_count_top_percent)} categories) **'])
             colors.extend(['red'])
 
-        if percentile != 100 or not suppress_100th_percentile_display:
+        if (percentile != 100 or not suppress_100th_percentile_display) and not suppress_output:
             plt.bar(d_pop_rep_labels, d_pop_rep, width=width, color=colors)
             # top label for grouping of significant (based on percentile)
             ax.text(
@@ -695,9 +756,17 @@ def analyze_categorical_reduction(
                 )
 
             ax.set_ybound(upper=pop_rep, lower=0)
+            # ax.set_ybound(upper=1, lower=0)
 
             plt.xticks(rotation=90)
 
+            plt.show()
+
+        if percentile==100 and not suppress_100th_percentile_display and not suppress_output:
+            display(HTML("<br><br>"))
+            plt.figure()
+            plt.hist(df[feat])
+            plt.gca().get_xaxis().set_visible(False)
             plt.show()
 
         percentile_entry = {}
@@ -709,23 +778,163 @@ def analyze_categorical_reduction(
 
         for candidate_map_to_category in map_to_candidates:
             sig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in many_categories_val_count_top_percent.keys()
-            if not suppress_map_to_candidates_display and percentile < 100:
+            if not suppress_map_to_candidates_display and percentile < 100 and not suppress_output:
                 display(HTML(f"{helper__HTML_tabs(1)}categories {'of top '+str(percentile)+'%' if percentile!=100 else ''} of '{feat}' contain '{candidate_map_to_category}'? {sig_contains_candidate_map_to_category[candidate_map_to_category]}"))
             insig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in insig_percentile_entry_categories
-            if not suppress_map_to_candidates_display and percentile < 100:
+            if not suppress_map_to_candidates_display and percentile < 100 and not suppress_output:
                 display(HTML(f"{helper__HTML_tabs(1)}insignificant categories of '{feat}' contain '{candidate_map_to_category}'? {insig_contains_candidate_map_to_category[candidate_map_to_category]}"))
 
         percentile_entry['sig'] = (list(many_categories_val_count_top_percent.keys()), many_categories_top_percent_index, sig_contains_candidate_map_to_category)
         percentile_entry['insig'] = (insig_percentile_entry_categories, insig_percentile_entry_index, insig_contains_candidate_map_to_category)
 
-        if i_p < len(final_percentiles)-1:
+        # if i_p < len(final_percentiles)-1:
+        if (percentile!=100 or not suppress_100th_percentile_display) and not suppress_output:
             display(HTML("<br><br><br><br>"))
 
         result_by_percentile[percentile] = percentile_entry
-
-    display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
+    if not suppress_output:
+        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
 
     return result_by_percentile
+
+def analyze_categorical_reduction__top_n(
+    df, 
+    df_name, 
+    feat, 
+    top_n,
+    truncate_sig_after_n=100,
+    map_to_candidates=['none','other','unknown'],
+    suppress_map_to_candidates_display=False,
+    suppress_output=False
+):
+    if not suppress_output:
+        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
+
+    result_by_top_n = {}
+
+    (
+        many_categories_top_n_index, 
+        many_categories_val_count_top_n,
+        reduction
+    ) = analyze_value_detailed__top_n(
+        df, 
+        df_name, 
+        feat, 
+        top_n, 
+        suppress_values=True, 
+        suppress_output=suppress_output
+    )
+
+    all_unique = df[feat].unique()
+    n_all_unique = len(all_unique)
+
+    if not suppress_output:
+        display(HTML("<p><br>"))
+
+        fs = (20,10)
+        width = 1
+        fig = plt.figure(figsize=fs)
+        plt.title(f"{n_all_unique} TOTAL unique " + r"$\bf{" + feat + "}$" + f" categories in {len(df)} observations", y=1.08)
+        ax = plt.gca()
+        rects = ax.patches
+
+        bar_label_voffset = .0375
+        sig_alpha = 0.4
+
+        sig_cats = list(filter(lambda e: e[1][1], many_categories_val_count_top_n.items()))
+        if len(many_categories_top_n_index) > truncate_sig_after_n:
+            all_cats = list(many_categories_val_count_top_n.items())
+            all_densities = [c[1][1] for c in all_cats]
+            all_counts = [c[1][0] for c in all_cats]
+            sig_cats = all_cats[:truncate_sig_after_n]
+            sig_densities = [sc[1][1] for sc in sig_cats]
+            sig_counts = [sc[1][0] for sc in sig_cats]
+            sig_cats.extend([(f'** TRUNCATED SIGNIFICANT ({len(all_cats)-truncate_sig_after_n} categories) **', (sum(all_counts)-sum(sig_counts), sum(all_densities)-sum(sig_densities)))])
+
+        densities = [sig_cat[1][1] for sig_cat in sig_cats]
+        counts = [sig_cat[1][0] for sig_cat in sig_cats]
+        labels = [str(sig_cat[0]) for sig_cat in sig_cats]
+        pop_rep = sum(densities)
+        pop_rep_count = sum(counts)
+
+        d_pop_rep = [pop_rep for d in densities]
+        d_pop_rep_labels = [l for l in labels]
+        colors = ['lime' for d in densities]
+        if len(many_categories_val_count_top_n) < n_all_unique:
+            d_pop_rep.extend([1-pop_rep])
+            d_pop_rep_labels.extend([f'** INSIGNIFICANT ({n_all_unique-len(many_categories_val_count_top_n)} categories) **'])
+            colors.extend(['red'])
+
+        plt.bar(d_pop_rep_labels, d_pop_rep, width=width, color=colors)
+        # top label for grouping of significant
+        ax.text(
+            (rects[-2].get_x()-rects[0].get_x())/2, 
+            pop_rep+bar_label_voffset,
+            f"{round(pop_rep*100,4)}% ({len(many_categories_val_count_top_n)} categories in {pop_rep_count} observations)",
+            ha='center', 
+            weight='bold'
+        )
+        # annotation for insignificant
+        if len(many_categories_val_count_top_n) < n_all_unique:
+            ax.text(
+                rects[-1].get_x()+rects[-1].get_width()/2, 
+                d_pop_rep[-1]+bar_label_voffset,
+                f"{round(d_pop_rep[-1]*100,4)}% ({len(df)-pop_rep_count} observations)",
+                ha='center', 
+                rotation=90,
+                weight='bold'
+            )
+
+        plt.bar(labels, densities, width=width, color='blue')
+        # annotation for significant (based on percentile)
+        for i_r_d, (rect, d) in enumerate(zip(rects, densities)):
+            ax.text(
+                rect.get_x()+rect.get_width()/2, 
+                d+bar_label_voffset,
+                f"{round(d*100,4)}% ({counts[i_r_d]} observations)",
+                ha='center', 
+                rotation=90,
+                weight='bold'
+            )
+
+        ax.set_ybound(upper=pop_rep, lower=0)
+        # ax.set_ybound(upper=1, lower=0)
+
+        plt.xticks(rotation=90)
+
+        plt.show()
+
+        display(HTML("<br><br>"))
+        plt.figure()
+        plt.hist(df[feat])
+        plt.gca().get_xaxis().set_visible(False)
+        plt.show()
+
+    top_n_entry = {}
+
+    sig_contains_candidate_map_to_category = {}
+    insig_contains_candidate_map_to_category = {}
+    insig_percentile_entry_categories = list(set(all_unique) - set(many_categories_val_count_top_n.keys()))
+    insig_percentile_entry_index = df[~df.index.isin(many_categories_top_n_index)].index
+
+    for candidate_map_to_category in map_to_candidates:
+        sig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in many_categories_val_count_top_n.keys()
+        if not suppress_output:
+            display(HTML(f"{helper__HTML_tabs(1)}categories of top {top_n} values of '{feat}' contain '{candidate_map_to_category}'? {sig_contains_candidate_map_to_category[candidate_map_to_category]}"))
+        insig_contains_candidate_map_to_category[candidate_map_to_category] = candidate_map_to_category in insig_percentile_entry_categories
+        if not suppress_output:
+            display(HTML(f"{helper__HTML_tabs(1)}insignificant categories of '{feat}' contain '{candidate_map_to_category}'? {insig_contains_candidate_map_to_category[candidate_map_to_category]}"))
+
+    top_n_entry['sig'] = (list(many_categories_val_count_top_n.keys()), many_categories_top_n_index, sig_contains_candidate_map_to_category)
+    top_n_entry['insig'] = (insig_percentile_entry_categories, insig_percentile_entry_index, insig_contains_candidate_map_to_category)
+
+    result_by_top_n[top_n] = top_n_entry
+
+    if not suppress_output:
+        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
+
+    return result_by_top_n
+
 
 def helper__summarize_categorical_reduction(result, feat, sig, map_to):
     n_unique_before = len(result[100]['sig'][0])
@@ -739,3 +948,143 @@ def helper__summarize_categorical_reduction(result, feat, sig, map_to):
     display(HTML(f"Occurrence of candidate-map-to-categories in these INSIGNIFICANT categories is as follows: {insig_map_to_categories_occurence_after}."))
     display(HTML(f"<br>By selecting categories from the top {sig}% (by count) of feature <b>{feat}</b>, we reduce the magnitude of the set of unique categories from {n_unique_before} to {n_sig_unique_after} (a {round(abs(1 - 1/(n_sig_unique_after/n_unique_before))*100,2)}% reduction in size!).  This will yield a significant reduction of One-Hot Encoded column explosion and, consequently, a significant performance gain when building classification models."))
     display(HTML(f"<br><br>We will map these \"insignificant\" {n_insig_unique_after} categories ({n_insig_after} observations) to \"{map_to}\"."))
+
+
+def reduce_unique__flat_n(df, df_name, feat, target_n, suppress_values=False):
+    l = len(df)
+    starting_unique_vals = df[feat].unique()
+    n_unique = len(starting_unique_vals)
+    n_unique_top_percentile = n_unique
+    actual_percentile = 0
+    top_percentile = 100
+
+    display(HTML(f"Attempting to reduce unique {feat} values in {df_name} to a flat count of {target_n} members..."))
+
+    # stopping condition: n_unique < 
+    while n_unique > 1 and n_unique_top_percentile > target_n and top_percentile > 0:
+        df_analysis, _ = analyze_values(
+            df[[feat]], 
+            f"{df_name} <i>{feat}</i> Detailed Value Analysis", 
+            standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
+            compute_top__kargs={'strategy':'percentile', 'value':top_percentile},
+            suppress_output=True
+        )
+        df_feat_value_analysis = df_analysis.loc[df_analysis['feature']==feat]
+        n_unique_top_percentile = df_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
+        actual_percentile = df_analysis['n_pop_rep'].values[0]*100
+        n_top_percentile = df_analysis[f'n_top_{top_percentile}_percent'].values[0]
+        val_count_top_percentile = df_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
+
+        top_percentile -= 1
+
+    display(HTML(f"{helper__HTML_tabs(1)}FOUND: <b>{n_unique_top_percentile} unique value(s)</b> (out of {n_unique} unique) <b>of <i>{feat}</i> constitute <u>{round(actual_percentile,2)}%</u> of the total number of observations</b> ({n_top_percentile} out of {l})"))
+
+def reduce_unique__first_n_chars(df, df_name, feat, target_first_n_chars=10, suppress_no_reduc=True, suppress_output=False):
+    df_abbrev = df.copy()
+
+    cols = [f'{feat}_abbrev', f'{feat}s', f'n_{feat}s']
+
+    n_unique = len(df_abbrev[feat].unique())
+
+    df_abbrev[cols[0]] = df_abbrev[feat].str.slice(0,target_first_n_chars)
+
+    unique_abbrev = df_abbrev[cols[0]].unique()
+
+    df_abbrev_analysis = pd.DataFrame(columns=cols)
+    for ufa in list(unique_abbrev):
+        u_vals_for_ufa = df_abbrev.query(f"{cols[0]}=='{ufa}'")[feat].unique()
+        data = [{
+            f'{cols[0]}': ufa, 
+            f'{cols[1]}': list(u_vals_for_ufa),
+            f'{cols[2]}': len(u_vals_for_ufa),
+        }]
+        df_abbrev_analysis = df_abbrev_analysis.append(data, ignore_index=True, sort=False)
+    df_abbrev_analysis = df_abbrev_analysis.sort_values(by=cols[0]).reset_index().drop('index', axis=1)
+
+    df_abbrev_unique_reduc = df_abbrev_analysis.query(f"{cols[2]}>1").set_index(cols[0])
+    if not suppress_output:
+        display(HTML(f"<h3>Reduction of <i>{feat}</i> unique-values space by replacing {feat} with first {target_first_n_chars} chars</h3>"))
+        display(HTML(f"n-unique abbrev: {len(list(unique_abbrev))} (down from {n_unique} total)"))
+        display(HTML(df_abbrev_unique_reduc.to_html()))
+    n_reduction = df_abbrev_unique_reduc[cols[2]].sum() - len(df_abbrev_unique_reduc)
+    if not suppress_output:
+        display(HTML(f"<p><br><h4>TOTAL UNIQUE-COUNT REDUCTION by replacing <i>{feat}</i> with <i>{cols[0]}</i> (first {target_first_n_chars} chars): {n_reduction}</h4>"))
+
+    df_abbrev_NO_unique_reduc = df_abbrev_analysis.query(f"{cols[2]}<=1")
+    n_no_reduction = len(unique_abbrev) - n_reduction
+    df_abbrev_NO_unique_reduc = df_abbrev_NO_unique_reduc.set_index(cols[0])
+    if not suppress_no_reduc and not suppress_output:
+        display(HTML(df_abbrev_NO_unique_reduc.head().to_html()))
+    if not suppress_output:
+        display(HTML(f"<h4>no. categories of <i>{feat}</i> where replacement does not reduce unique-count - i.e. where this is only one <i>{feat}</i> category mapped to an abbreviation: {n_no_reduction}</h4>"))
+
+    # now do the replacement
+    df_abbrev[feat] = df_abbrev[cols[0]]
+    df_abbrev = df_abbrev.drop(cols[0], axis=1)
+
+    # now check for non-identifying differences
+    df_abbrev_analysis = df_abbrev_analysis.set_index(cols[0])
+    non_indentifying_abbrevs = []
+    for abbrev, row in df_abbrev_analysis.iterrows():
+        vals_to_replace = row[cols[1]]
+
+        _abbrev_plus_one_char = [val_to_replace[0:target_first_n_chars+1] for val_to_replace in vals_to_replace]
+        _abbrev_plus_one_char_combinations = list(combinations(_abbrev_plus_one_char, 2))
+        for _abbrev_plus_one_char_combo in _abbrev_plus_one_char_combinations:
+            if _abbrev_plus_one_char_combo[0] != _abbrev_plus_one_char_combo[1]:
+                non_indentifying_abbrevs.append((abbrev, _abbrev_plus_one_char_combo))
+                break
+
+    if not suppress_output:
+        display(HTML("<p><br>"))
+
+    return df_abbrev, n_reduction, df_abbrev_unique_reduc, non_indentifying_abbrevs
+
+def minimize_loss__first_n_chars_reduction(df, df_name, feat, target_first_n_chars__start, target_first_n_chars__stop, verbose=False):
+    min_loss_of_info = None
+
+    for target_n in range(target_first_n_chars__start, target_first_n_chars__stop-1, -1):
+        _, n_reduction, df_abbrev_analysis, non_indentifying_abbrevs = reduce_unique__first_n_chars(
+            df, 
+            df_name, 
+            feat, 
+            target_first_n_chars=target_n,
+            suppress_output=not verbose
+        )
+
+        if len(non_indentifying_abbrevs) > 0:
+            _abbrevs_potential_loss_of_info = list(map(lambda nic: nic[0], non_indentifying_abbrevs))
+            n_count = len(_abbrevs_potential_loss_of_info)
+            loss_ratio = n_count/n_reduction
+            display(HTML(f"***WARNING!!!***  Some abbreviations ({n_count} out of {n_reduction}, ratio: {round(loss_ratio,4)}) from this scheme (abbrev. len: {target_n}) may result in lost information."))
+            if min_loss_of_info is None or loss_ratio < min_loss_of_info[3]:
+                min_loss_of_info = (target_n, n_count, n_reduction, loss_ratio)
+
+    display(HTML(f"<p><br>scheme with minimal loss of info: {min_loss_of_info}"))
+
+    df_abbrev_replacement_candidate, _, _, _ = reduce_unique__first_n_chars(
+        df, 
+        f"suggested <i>{feat}</i> abbreviation scheme for {df_name}", 
+        feat, 
+        target_first_n_chars=min_loss_of_info[0],
+        suppress_output=not verbose
+    )
+
+    return df_abbrev_replacement_candidate, min_loss_of_info
+
+
+def json_to_md5_hash_digest(json_object):
+    json_object_as_string = json.dumps(json_object, separators=(',', ':'))
+    hashed_json_object_as_string = hashlib.md5(json_object_as_string.encode()) # UTF-8 is default
+    return hashed_json_object_as_string.hexdigest()
+
+def get_data_fname(experiment_cfg, data_kwargs):
+    experiment_cfg_hash_str = json_to_md5_hash_digest(experiment_cfg)
+    #print(f"experiment_config as md5 hash digest: {experiment_cfg_hash_str}")
+
+    if data_kwargs['is_labels']: # then we want the fname for labels
+        fname = f"{experiment_cfg['labels'][data_kwargs['type']]['fname_prefix']}-{experiment_cfg_hash_str}.{experiment_cfg['labels']['fname_ext']}"
+    else: # then we want the fname for predictors
+        fname = f"{experiment_cfg['wrangled_data'][data_kwargs['type']]['fname_prefix']}-{experiment_cfg_hash_str}.{experiment_cfg['wrangled_data']['fname_ext']}"
+
+    return fname

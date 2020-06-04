@@ -1,0 +1,65 @@
+{
+    //official data
+    "official_data": {
+        "unlabeled_predictors": {
+            "url": "https://s3.amazonaws.com/drivendata-prod/data/7/public/702ddfc5-68cd-4d1d-a0de-f5f566f76d91.csv",
+            "local_fname": "Taarifa-Unlabeled-Predictors.csv"
+        },
+
+        "labeled_predictors": {
+            "url": "https://s3.amazonaws.com/drivendata-prod/data/7/public/4910797b-ee55-40a7-8668-10efd5c1b960.csv",
+            "local_fname": "Taarifa-Labeled-Predictors.csv"
+        },
+
+        "labels": {
+            "url": "https://s3.amazonaws.com/drivendata-prod/data/7/public/0bf8bc6e-30d0-4c50-956a-603fc693d966.csv",
+            "local_fname": "Taarifa-Labels.csv"
+        }
+    },
+
+    // ratio/size of the test data (taken from labeled predictors)
+    "test_ratio": 0.10,
+
+    //the random_state seed used throughout the project
+    "SEED": 42,
+
+    "insig_cat_handling": {
+        "installer": {
+            "strategy": "flat",
+            "threshold": 10,
+            "map_to": "other"
+        },
+
+        "scheme_name": {
+            "strategy": "flat",
+            "threshold": 10,
+            "map_to": "other"
+        }
+    },
+
+    "wrangled_data": {
+        "fname_ext": "csv",
+
+        //tacit: these refer to predictors
+        "train": {
+            "fname_prefix": "wrangled-labeled-data-train"
+        },
+        "test": {
+            "fname_prefix": "wrangled-labeled-data-test"
+        },
+        "unlabeled": {
+            "fname_prefix": "wrangled-unlabeled-data"
+        }
+    },
+
+    "labels": {
+        "fname_ext": "csv",
+
+        "train": {
+            "fname_prefix": "labels-train"
+        },
+        "test": {
+            "fname_prefix": "labels-test"
+        }
+    }
+}
