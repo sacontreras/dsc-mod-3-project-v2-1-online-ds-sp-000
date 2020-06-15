@@ -12,6 +12,8 @@ import math
 from itertools import combinations
 import json
 import hashlib
+import re
+import inspect
 
 
 
@@ -127,13 +129,16 @@ def analyze_values(
 
     l = len(df)
     if not suppress_output:
-        display(HTML(f"<h3>{df_name} DataFrame Feature-Value Analysis (out of {l} total observations{', strings lcase normalized' if normalize_lcase else ''})</h3>"))
+        display(HTML(f"<h3>{df_name} Feature-Value Analysis (out of {l} total observations{', strings lcase normalized' if normalize_lcase else ''})</h3>"))
     
     feats_with_unique_count = {}
     for col in df.columns:
-        unique_values = df[col].str.lower().unique() if normalize_lcase and is_string_dtype(df[col]) else df[col].unique()
+        if is_string_dtype(df[col]):
+            unique_values = df[col].str.lower().unique() if normalize_lcase else df[col].astype(str).unique()
+        else:
+            unique_values = df[col].unique()
         if sort_unique_vals:
-            unique_values = sorted(unique_values)
+            unique_values = sorted(list(unique_values))
         n_unique = len(unique_values)
         feats_with_unique_count[col] = (n_unique, unique_values)
 
@@ -198,7 +203,8 @@ def analyze_values(
                 new_count_top = count_top + (1 if compute_top_literal else feat_val_count)
                 if len(val_count_top)==0 or new_count_top <= count_top_thresh:
                     count_top = new_count_top
-                    feat_val = feat_val_counts.index[i]
+                    # feat_val = feat_val_counts.index[i]
+                    feat_val = feat_val_counts.index.values[i]
                     val_count_top[feat_val] = (feat_val_count, feat_val_count/l)
                 else:
                     break
@@ -226,8 +232,7 @@ def analyze_values(
     display_duplicates_heads = compute_duplicates and 'display_heads' in compute_duplicates__kargs and compute_duplicates__kargs['display_heads']
     duplicates_entries = []
     if compute_duplicates and len(df.columns)>1:
-        if not suppress_output:
-            display(HTML(f"<p><br><h4>{df_name} Duplicates-Analysis:</h4>"))
+        display(HTML(f"<p><br><h4>{df_name} Duplicates-Analysis:</h4>"))
         for dt in set(df.dtypes):
             df_of_type_dt = df.select_dtypes(dt)
             feats_of_same_type_combos = set(it.combinations(list(df_of_type_dt.columns), 2))
@@ -235,12 +240,11 @@ def analyze_values(
                 df_identical_combo_vals = df[df[feats_combo[0]]==df[feats_combo[1]]]
                 duplicates_entries.append((df_identical_combo_vals, feats_combo, dt))
                 n_dups = len(df_identical_combo_vals)
-                if not suppress_output:
-                    display(HTML(f"combo ({dt}): <b>{feats_combo}</b>; duplicates-count: {n_dups}/{l} ({round((n_dups/l)*100, 4)}%)"))
-                    if display_duplicates_heads:
-                        display(HTML(f"<h6>Head:</h6>"))
-                        display(HTML(df_identical_combo_vals.head().to_html(notebook=True)))
-                        display(HTML("<p><br><br>"))
+                display(HTML(f"combo ({dt}): <b>{feats_combo}</b>; duplicates-count: {n_dups}/{l} ({round((n_dups/l)*100, 4)}%)"))
+                if display_duplicates_heads:
+                    display(HTML(f"<h6>Head:</h6>"))
+                    display(HTML(df_identical_combo_vals.head().to_html(notebook=True)))
+                    display(HTML("<p><br><br>"))
 
     display_top_bar_plots = compute_top__value is not None and 'display_bar_plots' in compute_top__kargs and compute_top__kargs['display_bar_plots']
     if not suppress_output and display_top_bar_plots:
@@ -625,18 +629,19 @@ def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50):
 
 def index_of_values(df, df_name, feat, values):
     values_found_at = np.where(np.isin(df[feat].values, values))[0]
-    return (values_found_at, df.loc[values_found_at][feat].unique())
+    return (values_found_at, df.iloc[values_found_at][feat].unique())
 
 
-def analyze_duplicates(feat_group_name, feat_group, df_name, df, max_unique_display=100):
+def analyze_overlap(feat_group_name, feat_group, df_name, df, max_unique_display=100, suppress_value_analysis_output=False):
     s_list = '[' + ''.join([f"{', ' if i > 0 else ''}'{feat}'" for i, feat in enumerate(feat_group)]) + ']'
-    display(HTML(f"<h4>Duplicates Analysis: <i>{feat_group_name}</i> Types: {s_list}</h4>"))
+    display(HTML(f"<h4>Overlap Analysis: <i>{feat_group_name}</i> Types: {s_list}</h4>"))
 
     df_analysis, duplicates_entries = analyze_values(
         df[feat_group], 
         f"{df_name} <i>{feat_group_name}</i> Type", 
         standard_options_kargs={'sort_unique_vals':True, 'hide_cols':True},
-        compute_duplicates__kargs={'display_heads':False}
+        compute_duplicates__kargs={'display_heads':False},
+        suppress_output=suppress_value_analysis_output
     )
 
     display(HTML("<p><br>"))
@@ -646,7 +651,7 @@ def analyze_duplicates(feat_group_name, feat_group, df_name, df, max_unique_disp
     helper__display_complement_from_duplicates_entries(duplicates_entries, df)
 
 
-def analyze_categorical_reduction(
+def analyze_distributions(
     df, 
     df_name, 
     feat, 
@@ -655,10 +660,11 @@ def analyze_categorical_reduction(
     truncate_sig_after_n=100,
     map_to_candidates=['none','other','unknown'],
     suppress_map_to_candidates_display=False,
-    suppress_output=False
+    suppress_output=False,
+    fs=(20,10)
 ):
     if not suppress_output:
-        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
+        display(HTML(f"***** Distributions Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
 
     result_by_percentile = {}
 
@@ -688,7 +694,6 @@ def analyze_categorical_reduction(
         n_all_unique = len(all_unique)
 
         if (percentile != 100 or not suppress_100th_percentile_display) and not suppress_output:
-            fs = (20,10)
             width = 1
             fig = plt.figure(figsize=fs)
             plt.title(f"{n_all_unique} TOTAL unique " + r"$\bf{" + feat + "}$" + f" categories in {len(df)} observations", y=1.08)
@@ -755,18 +760,19 @@ def analyze_categorical_reduction(
                     weight='bold'
                 )
 
-            ax.set_ybound(upper=pop_rep, lower=0)
             # ax.set_ybound(upper=1, lower=0)
-
+            ax.set_ybound(lower=0, upper=pop_rep)
             plt.xticks(rotation=90)
-
             plt.show()
 
         if percentile==100 and not suppress_100th_percentile_display and not suppress_output:
             display(HTML("<br><br>"))
-            plt.figure()
-            plt.hist(df[feat])
-            plt.gca().get_xaxis().set_visible(False)
+            plt.figure(figsize=fs)
+            plt.hist(df[feat], bins=n_all_unique)
+            # plt.gca().set_xlim(left=df[feat].min(), right=df[feat].max())
+            plt.xticks(rotation=90)
+            if n_all_unique > 100:
+                plt.gca().get_xaxis().set_visible(False)
             plt.show()
 
         percentile_entry = {}
@@ -793,11 +799,11 @@ def analyze_categorical_reduction(
 
         result_by_percentile[percentile] = percentile_entry
     if not suppress_output:
-        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
+        display(HTML(f"***** Distributions Analysis for <b>{feat}</b> in {df_name}: END *****"))
 
     return result_by_percentile
 
-def analyze_categorical_reduction__top_n(
+def analyze_distributions__top_n(
     df, 
     df_name, 
     feat, 
@@ -808,7 +814,7 @@ def analyze_categorical_reduction__top_n(
     suppress_output=False
 ):
     if not suppress_output:
-        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
+        display(HTML(f"***** Distributions Analysis for <b>{feat}</b> in {df_name}: BEGIN *****"))
 
     result_by_top_n = {}
 
@@ -931,7 +937,7 @@ def analyze_categorical_reduction__top_n(
     result_by_top_n[top_n] = top_n_entry
 
     if not suppress_output:
-        display(HTML(f"***** Category Reduction Analysis for <b>{feat}</b> in {df_name}: END *****"))
+        display(HTML(f"***** Distributions Analysis for <b>{feat}</b> in {df_name}: END *****"))
 
     return result_by_top_n
 
@@ -1078,13 +1084,56 @@ def json_to_md5_hash_digest(json_object):
     hashed_json_object_as_string = hashlib.md5(json_object_as_string.encode()) # UTF-8 is default
     return hashed_json_object_as_string.hexdigest()
 
-def get_data_fname(experiment_cfg, data_kwargs):
-    experiment_cfg_hash_str = json_to_md5_hash_digest(experiment_cfg)
-    #print(f"experiment_config as md5 hash digest: {experiment_cfg_hash_str}")
+def get_data_fname(eda_cfg, data_kwargs):
+    is_data_cached = 'is_cached' in data_kwargs and data_kwargs['is_cached']
+    digest_str = eda_cfg['digest'] if is_data_cached else json_to_md5_hash_digest(eda_cfg)
+    #print(f"eda_cfg as md5 hash digest: {digest_str}")
 
     if data_kwargs['is_labels']: # then we want the fname for labels
-        fname = f"{experiment_cfg['labels'][data_kwargs['type']]['fname_prefix']}-{experiment_cfg_hash_str}.{experiment_cfg['labels']['fname_ext']}"
+        fname = f"{eda_cfg['labels'][data_kwargs['type']]['fname_prefix']}-{digest_str}.{eda_cfg['labels']['fname_ext']}"
     else: # then we want the fname for predictors
-        fname = f"{experiment_cfg['wrangled_data'][data_kwargs['type']]['fname_prefix']}-{experiment_cfg_hash_str}.{experiment_cfg['wrangled_data']['fname_ext']}"
+        fname = f"{eda_cfg['wrangled_data'][data_kwargs['type']]['fname_prefix']}-{digest_str}.{eda_cfg['wrangled_data']['fname_ext']}"
 
     return fname
+
+def find_weird_vals(df, df_name, regx_weird_val=r"\b[^a-zA-Z]+\b", suppress_output=False):
+    df_values_analysis, _ = analyze_values(df, df_name, standard_options_kargs={'sort_unique_vals':True,'hide_cols':True}, suppress_output=True)
+    df_analysis_object_feats = df_values_analysis.loc[df_values_analysis['dtype']==object]
+    weird_vals_map = {}
+    for idx, row in df_analysis_object_feats.iterrows():
+        feat = row['feature']
+        unique_nonalphabetic_string_vals = row['unique_vals']
+        weird_vals = []
+        for val in unique_nonalphabetic_string_vals:
+            weird_val = re.match(regx_weird_val, val)
+            if weird_val:
+                weird_vals.append(val)
+        if len(weird_vals) > 0:
+            weird_vals_map[feat] = weird_vals
+
+    if not suppress_output:
+        if len(weird_vals_map) > 0:
+            for feat, weird_vals in weird_vals_map.items():
+                print(f"{feat}:")
+                for weird_val in weird_vals:
+                    print(f"\t'{weird_val}' is weird (according to weird-value regex: '{regx_weird_val}')")
+            print()
+        else:
+            print(f"there are no weird vals (according to weird-value regex: '{regx_weird_val}')")
+
+    return weird_vals_map
+
+
+def display_sourcecode(f):
+    display(HTML(f"<code class='python'><pre>{inspect.getsource(f)}</pre></code>"))
+
+
+def convert_col_type(df, feat, to_type):
+    df_copy = df.copy()
+    df_copy[feat] = df_copy[feat].astype(to_type)
+    return df_copy
+
+def convert_col_to_date_type(df, feat, format="%Y-%m-%d"):
+    df_copy = df.copy()
+    df_copy[feat] = pd.to_datetime(df_copy[feat], format=format)
+    return df_copy

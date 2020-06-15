@@ -17,6 +17,10 @@
         }
     },
 
+    "eda_desc": {
+        "short": "0.10 test_ratio, flat insig cat hat handling with threshold 10; location based on ward"
+    },
+
     // ratio/size of the test data (taken from labeled predictors)
     "test_ratio": 0.10,
 
@@ -34,13 +38,18 @@
             "strategy": "flat",
             "threshold": 10,
             "map_to": "other"
+        },
+
+        "ward": {
+            "strategy": "flat",
+            "threshold": 10,
+            "map_to": "other"
         }
     },
 
     "wrangled_data": {
         "fname_ext": "csv",
 
-        //tacit: these refer to predictors
         "train": {
             "fname_prefix": "wrangled-labeled-data-train"
         },

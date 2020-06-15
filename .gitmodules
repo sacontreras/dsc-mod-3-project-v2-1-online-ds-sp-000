@@ -1,0 +1,3 @@
+[submodule "scjpnlib/textprocessing"]
+	path = scjpnlib/textprocessing
+	url = https://github.com/sacontreras/string_grouper
