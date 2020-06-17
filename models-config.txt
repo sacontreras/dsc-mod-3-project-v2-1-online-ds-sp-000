@@ -123,57 +123,16 @@
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
-
-                // gamma tuning
+                // n_estimators tuning
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
-                            "learning_rate": [0.1],
-                            "max_depth": [3],
-                            "min_child_weight": [1],
-                            "subsample": [1],
-
-                            // this is the param we are twiddling in this trial
-                            "gamma": [0, 1, 2, 5, 10],
-
-                            "n_estimators": [100]
+                            "n_estimators": [100, 500, 750, 1000]
                         },
 
                         "last_best": {
-                            "learning_rate": 0.1,
-                            "max_depth": 3,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
-                            "n_estimators": 100
-                        }
-                    }
-                },
-
-                // learning_rate tuning
-                {
-                    "gridsearch": {
-                        "run": false,
-
-                        "param_grid": {
-                            // this is the param we are twiddling in this trial
-                            "learning_rate": [0.1, 0.3, 0.6, 1.0],
-
-                            "max_depth": [3],
-                            "min_child_weight": [1],
-                            "subsample": [1],
-                            "gamma": [1],
-                            "n_estimators": [100]
-                        },
-
-                        "last_best": {
-                            "learning_rate": 0.3,
-                            "max_depth": 3,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
                             "n_estimators": 100
                         }
                     }
@@ -182,27 +141,30 @@
                 // max_depth tuning
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
+                        // try with number of features
                         "param_grid": {
-                            "learning_rate": [0.3],
-
-                            // this is the param we are twiddling in this trial
-                            "max_depth": [3, 5, 10, 25, 50],
-
-                            "min_child_weight": [1],
-                            "subsample": [1],
-                            "gamma": [1],
-                            "n_estimators": [100]
+                            "max_depth": [3, 5, 10, 22, 50]
                         },
 
                         "last_best": {
-                            "learning_rate": 0.3,
-                            "max_depth": 10,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
-                            "n_estimators": 100
+                            "max_depth": 3
+                        }
+                    }
+                },
+
+                // learning_rate tuning
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            "learning_rate": [0.1, 0.3, 0.6, 1.0]
+                        },
+
+                        "last_best": {
+                            "learning_rate": 0.1
                         }
                     }
                 },
@@ -210,27 +172,14 @@
                 // min_child_weight tuning
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
-                            "learning_rate": [0.3],
-                            "max_depth": [10],
-
-                            // this is the param we are twiddling in this trial
-                            "min_child_weight": [1, 3, 5],
-
-                            "subsample": [1],
-                            "gamma": [1],
-                            "n_estimators": [100]
+                            "min_child_weight": [1, 3, 5]
                         },
 
                         "last_best": {
-                            "learning_rate": 0.3,
-                            "max_depth": 10,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
-                            "n_estimators": 100
+                            "min_child_weight": 1
                         }
                     }
                 },
@@ -238,54 +187,29 @@
                 // subsample tuning
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
-                            "learning_rate": [0.3],
-                            "max_depth": [10],
-                            "min_child_weight": [1],
-
-                            // this is the param we are twiddling in this trial
-                            "subsample": [0.1, 0.25, 0.5, 1.0],
-
-                            "gamma": [1],
-                            "n_estimators": [100]
+                            "subsample": [0.1, 0.25, 0.5, 1.0]
                         },
 
                         "last_best": {
-                            "learning_rate": 0.3,
-                            "max_depth": 10,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
-                            "n_estimators": 100
+                            "subsample": 1.0
                         }
                     }
                 },
 
-                // n_estimators tuning
+                // gamma tuning
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
-                            "learning_rate": [0.3],
-                            "max_depth": [10],
-                            "min_child_weight": [1],
-                            "subsample": [1.0],
-                            "gamma": [1],
-
-                            // this is the param we are twiddling in this trial
-                            "n_estimators": [100, 500, 750, 1000]
+                            "gamma": [0, 1, 2, 5, 10]
                         },
 
                         "last_best": {
-                            "learning_rate": 0.3,
-                            "max_depth": 10,
-                            "min_child_weight": 1,
-                            "subsample": 1,
-                            "gamma": 1,
-                            "n_estimators": 100
+                            "gamma": 5
                         }
                     }
                 }
@@ -294,11 +218,11 @@
 
         //these will be used when trials['run']==false
         "params": {
-            "learning_rate": 0.3,
-            "max_depth": 10,
+            "learning_rate": 0.1,
+            "max_depth": 3,
             "min_child_weight": 1,
-            "subsample": 1,
-            "gamma": 1,
+            "subsample": 1.0,
+            "gamma": 5,
             "n_estimators": 100
         }
     }

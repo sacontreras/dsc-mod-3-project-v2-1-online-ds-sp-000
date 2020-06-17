@@ -47,6 +47,10 @@
         }
     },
 
+    "override_drop_feats": [
+        //"amount_tsh"
+    ],
+
     "wrangled_data": {
         "fname_ext": "csv",
 

@@ -132,9 +132,9 @@ def _tfidf_kmeans_classify_feature(df, feat, kmeans, tfidf_vectorizer, idx_term_
     return df, feat_name_class
 
 
-def tfidf_kmeans_classify_feature(df, df_name, feat, n_mean_cluster_size=None, verbose=1, display_max_rows=25):
+def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, verbose=1, display_max_rows=25):
     """
-    IMPORTANT!  Set n_mean_cluster_size only if you want to OVERRIDE the default beahvior to base KMeans n_clusters on entropy of TF-IDF doc distribution.
+    IMPORTANT!  Set mean_cluster_size only if you want to OVERRIDE the default beahvior to base KMeans n_clusters on entropy of TF-IDF doc distribution.
         
         *** IN GENERAL, THIS IS A BAD IDEA UNLESS YOU HAVE AN EXPLICIT REASON FOR DOING SO! ***
     """
@@ -184,13 +184,13 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, n_mean_cluster_size=None, v
     # THIS PART IS KEY!  Entropy is the basis for setting the proper cluster size and hence the proper n_clusters parameter to build the KMeans model!
     dist_normalized = df_copy[feat_name_after_tfidf].value_counts(normalize=True)
     _entropy = entropy(dist_normalized, base=2)
-    display(HTML(f"<p><br>info: set n_mean_cluster_size=={n_mean_cluster_size}; calculated entropy: {_entropy}"))
-    if n_mean_cluster_size is None:
-        n_mean_cluster_size = math.ceil(_entropy)
-        display(HTML(f"<p><br>set n_mean_cluster_size=={n_mean_cluster_size} (math.ceil(_entropy))"))
+    display(HTML(f"<p><br>info: mean_cluster_size=={mean_cluster_size}; calculated entropy: {_entropy}"))
+    if mean_cluster_size is None:
+        mean_cluster_size = _entropy
+        display(HTML(f"<p><br>set mean_cluster_size=={mean_cluster_size}"))
         
     # build KMeans model
-    n_clusters = int(len(corpus)/n_mean_cluster_size) # 8 is default n_clusters value for KMeans
+    n_clusters = int(len(corpus)/mean_cluster_size) # 8 is default n_clusters value for KMeans
     kmeans, df_kmeans_clusters = _kmeans_from_tfidf(tfidf, idx_term_map, n_clusters)
 
     # add new "class" feature

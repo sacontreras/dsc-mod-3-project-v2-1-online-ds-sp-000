@@ -599,14 +599,18 @@ def analyze_outliers_detailed(
     return outliers_index, best_replace_outliers_rules, all_replace_outliers_rules
 
 
-def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50):
+def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50, suppress_output=False):
     l = len(df)
-    display(HTML(f"<h3>{df_name} DataFrame Non-Alphanumeric-String Value Analysis (out of {l} total observations)</h3>"))
+    
+    if not suppress_output:
+        display(HTML(f"<h3>{df_name} DataFrame Non-Alphanumeric-String Value Analysis (out of {l} total observations)</h3>"))
 
     df_analysis, _ = analyze_values(df, df_name, standard_options_kargs={'compute_non_alphanumeric_str':True}, suppress_output=True)
     df_analysis = df_analysis.loc[df_analysis['dtype']==object][['feature', 'n_unique', 'n_non_alphanumeric_str', 'non_alphanumeric_str_index']]
-    display(HTML(df_analysis.to_html(notebook=True)))
-    display(HTML("<p><br>"))
+    
+    if not suppress_output:
+        display(HTML(df_analysis.to_html(notebook=True)))
+        display(HTML("<p><br>"))
 
     str_feat_unique_nonalphanumeric_string_vals = {}
     for str_feat in list(df_analysis.feature.unique()):
@@ -615,14 +619,17 @@ def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50):
             unique_nonalphanumeric_strings = df.loc[feat_nonalphanumeric_index][str_feat].unique()
             str_feat_unique_nonalphanumeric_string_vals[str_feat] = df.loc[feat_nonalphanumeric_index][str_feat].unique()
             n_unique_non_alphanumeric = len(unique_nonalphanumeric_strings)
-            display(HTML(f"in {df_name}, string-type feature <b>{str_feat}</b> has, occurring in {len(feat_nonalphanumeric_index)} observations, {n_unique_non_alphanumeric} unique non-alphanumeric values:"))
-            for i, nonalphanumeric_string in enumerate(sorted(unique_nonalphanumeric_strings)):
-                if i < truncate_output_threshold:
-                    display(HTML(f"{helper__HTML_tabs(1)}'{nonalphanumeric_string}'"))
-                else:
-                    display(HTML(f"*** TRUNCATED since <b>{str_feat}</b> has {n_unique_non_alphanumeric} unique non-alphanumeric values***"))
-                    break
-            display(HTML("<p><br>"))
+            
+            if not suppress_output:
+                display(HTML(f"in {df_name}, string-type feature <b>{str_feat}</b> has, occurring in {len(feat_nonalphanumeric_index)} observations, {n_unique_non_alphanumeric} unique non-alphanumeric values:"))
+            
+                for i, nonalphanumeric_string in enumerate(sorted(unique_nonalphanumeric_strings)):
+                    if i < truncate_output_threshold:
+                        display(HTML(f"{helper__HTML_tabs(1)}'{nonalphanumeric_string}'"))
+                    else:
+                        display(HTML(f"*** TRUNCATED since <b>{str_feat}</b> has {n_unique_non_alphanumeric} unique non-alphanumeric values***"))
+                        break
+                display(HTML("<p><br>"))
 
     return (str_feat_unique_nonalphanumeric_string_vals, df_analysis)
 
@@ -1095,6 +1102,14 @@ def get_data_fname(eda_cfg, data_kwargs):
         fname = f"{eda_cfg['wrangled_data'][data_kwargs['type']]['fname_prefix']}-{digest_str}.{eda_cfg['wrangled_data']['fname_ext']}"
 
     return fname
+
+def get_model_result_fname(eda_cfg, data_kwargs):
+    is_data_cached = 'is_cached' in data_kwargs and data_kwargs['is_cached']
+    digest_str = eda_cfg['digest'] if is_data_cached else json_to_md5_hash_digest(eda_cfg)
+    #print(f"eda_cfg as md5 hash digest: {digest_str}")
+
+    return f"models-results-{digest_str}.json"
+
 
 def find_weird_vals(df, df_name, regx_weird_val=r"\b[^a-zA-Z]+\b", suppress_output=False):
     df_values_analysis, _ = analyze_values(df, df_name, standard_options_kargs={'sort_unique_vals':True,'hide_cols':True}, suppress_output=True)

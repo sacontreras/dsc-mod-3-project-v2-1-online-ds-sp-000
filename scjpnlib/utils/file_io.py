@@ -6,6 +6,8 @@ from tqdm import tqdm
 import numpy as np
 import json
 from json_minify import json_minify
+import io
+from functools import singledispatch
 
 class FileManager:
     def __init__(self):
@@ -59,3 +61,19 @@ class FileManager:
         json_object = json.loads(json_minify(_raw)) # minify is used so that we can place comments/documentation in the JSON config file (which is normally invalid in JSON)
         f.close()
         return json_object
+
+
+    # apparently np.float32 is not serializable!
+    def default(self, o):
+        if isinstance(o, np.float32): return np.float64(o)  
+        raise TypeError
+
+    def save_json(self, d, fname):
+        with io.open(fname, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(d, ensure_ascii=False, sort_keys=False, indent=4, default=self.default))
+        f.close()
+
+    def append_text_file(self, line, fname):
+        with open(fname, 'a') as f:
+            f.write(line)
+        f.close()
