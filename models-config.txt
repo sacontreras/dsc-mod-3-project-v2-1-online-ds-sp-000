@@ -1,4 +1,20 @@
 {
+    "dask": {
+        "use": false,
+
+        "is_remote": false,
+
+        "local": {
+            "n_workers": 1,
+            "n_jobs": 8,
+            "memory_limit": "16GB"
+        },
+
+        "remote": {
+            "scheduler_address": "35.230.13.87"
+        }
+    },
+
     /*
     "data_cached": {
         "digest": "1d7f80e43261a7589d64368eab8a2853",
@@ -38,6 +54,8 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
+        "run": false,
+
         "trials": {
             "run": false,
 
@@ -78,6 +96,8 @@
     },
 
     "RandomForestClassifier": {
+        "run": false,
+
         "trials": {
             "run": false,
 
@@ -118,8 +138,10 @@
     },
 
     "XGBClassifier": {
+        "run": true,
+
         "trials": {
-            "run": false,
+            "run": true,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
