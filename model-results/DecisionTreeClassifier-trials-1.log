@@ -1,0 +1,132 @@
+param_grid for DecisionTreeClassifier GridSearch:{'criterion': ['entropy', 'gini'], 'splitter': ['best'], 'max_depth': [10, 50, 75, None], 'min_samples_split': [2], 'max_features': ['auto', 'sqrt', 'log2']}
+
+Grid Search found the following optimal parameters: 
+{   'criterion': 'entropy',
+    'max_depth': 75,
+    'max_features': 'sqrt',
+    'min_samples_split': 2,
+    'splitter': 'best'}
+
+Fitting classifier...
+	ALL DONE!
+
+Predicting labels on training data...
+	ALL DONE!
+
+Training Accuracy: 99.5836
+
+                         precision    recall  f1-score   support
+
+             functional       0.99      1.00      1.00     30623
+functional needs repair       0.98      0.97      0.98      4093
+         non functional       1.00      1.00      1.00     21714
+
+               accuracy                           1.00     56430
+              macro avg       0.99      0.99      0.99     56430
+           weighted avg       1.00      1.00      1.00     56430
+
+
+Predicting labels on testing data...
+	ALL DONE!
+
+Testing Accuracy: 76.431
+
+                         precision    recall  f1-score   support
+
+             functional       0.81      0.82      0.81      1636
+functional needs repair       0.37      0.35      0.36       224
+         non functional       0.77      0.77      0.77      1110
+
+               accuracy                           0.76      2970
+              macro avg       0.65      0.65      0.65      2970
+           weighted avg       0.76      0.76      0.76      2970
+
+
+Feature Importances:
+[   ('longitude', 0.14350094358524726),
+    ('scheme_name', 0.14220670714360042),
+    ('latitude', 0.13905157521666092),
+    ('quantity', 0.09441352898638983),
+    ('waterpoint_type', 0.07702182477823685),
+    ('gps_height', 0.0683336117778839),
+    ('installer', 0.060177772275642735),
+    ('population', 0.048286398317658845),
+    ('pump_age', 0.033257745527256376),
+    ('region_code', 0.032010322888554966),
+    ('extraction_type', 0.02220214912055652),
+    ('source', 0.020114134671910172),
+    ('district_code', 0.01988310394260805),
+    ('payment_type', 0.01815513687924155),
+    ('amount_tsh', 0.016043491437443526),
+    ('basin', 0.015284379802368193),
+    ('management', 0.014572285937426672),
+    ('scheme_management', 0.01107200672301818),
+    ('water_quality', 0.01016782849161564),
+    ('permit', 0.007281549430674996),
+    ('public_meeting', 0.0069635030660044105)]
+
+Grid Search (previously) found the following optimal parameters: 
+{   'criterion': 'entropy',
+    'max_depth': 75,
+    'max_features': 'sqrt',
+    'min_samples_split': 2,
+    'random_state': 42,
+    'splitter': 'best'}
+
+Fitting classifier...
+	ALL DONE!
+
+Predicting labels on training data...
+	ALL DONE!
+
+Training Accuracy: 99.5836
+
+                         precision    recall  f1-score   support
+
+             functional       0.99      1.00      1.00     30623
+functional needs repair       0.98      0.97      0.98      4093
+         non functional       1.00      1.00      1.00     21714
+
+               accuracy                           1.00     56430
+              macro avg       0.99      0.99      0.99     56430
+           weighted avg       1.00      1.00      1.00     56430
+
+
+Predicting labels on testing data...
+	ALL DONE!
+
+Testing Accuracy: 75.4209
+
+                         precision    recall  f1-score   support
+
+             functional       0.80      0.81      0.80      1636
+functional needs repair       0.39      0.34      0.36       224
+         non functional       0.76      0.75      0.75      1110
+
+               accuracy                           0.75      2970
+              macro avg       0.65      0.63      0.64      2970
+           weighted avg       0.75      0.75      0.75      2970
+
+
+Feature Importances:
+[   ('latitude', 0.14741805066748864),
+    ('longitude', 0.1424977062124142),
+    ('scheme_name', 0.11717202109772581),
+    ('quantity', 0.09499113245660391),
+    ('waterpoint_type', 0.07164815072925713),
+    ('installer', 0.06947329428808201),
+    ('gps_height', 0.06607494065495596),
+    ('population', 0.046563285126403155),
+    ('payment_type', 0.03920542278915752),
+    ('pump_age', 0.03848899986865261),
+    ('extraction_type', 0.0254899313414668),
+    ('district_code', 0.0216968735314086),
+    ('source', 0.021376437934549162),
+    ('basin', 0.018635939207490737),
+    ('region_code', 0.015018011298353305),
+    ('scheme_management', 0.014025462061356976),
+    ('water_quality', 0.012265133465162087),
+    ('management', 0.012019697732540871),
+    ('amount_tsh', 0.010858458193677596),
+    ('public_meeting', 0.00824181984108016),
+    ('permit', 0.006839231502172784)]

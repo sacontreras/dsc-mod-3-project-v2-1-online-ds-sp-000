@@ -1,0 +1,106 @@
+{
+    "digest": "2ad8d15b2355a181c684ec4dd8945e2c",
+    "modeling_results": {
+        "RandomForestClassifier": {
+            "accuracy": {
+                "train": 1.0,
+                "test": 0.7237373737373738
+            },
+            "cv_score": {
+                "train": 0.9201084923307146,
+                "test": 0.7631313131313131
+            },
+            "feature_importances": [
+                [
+                    "funder_target_encoded",
+                    0.17895885157679375
+                ],
+                [
+                    "quantity_target_encoded",
+                    0.11155467408033143
+                ],
+                [
+                    "scheme_name_target_encoded",
+                    0.09820498220494107
+                ],
+                [
+                    "installer_target_encoded",
+                    0.09328983508646516
+                ],
+                [
+                    "waterpoint_type_target_encoded",
+                    0.05881907562046724
+                ],
+                [
+                    "longitude",
+                    0.05629124353363984
+                ],
+                [
+                    "extraction_type_target_encoded",
+                    0.05499564786914667
+                ],
+                [
+                    "latitude",
+                    0.054491020977266776
+                ],
+                [
+                    "region_code_target_encoded",
+                    0.03180950716223796
+                ],
+                [
+                    "payment_type_target_encoded",
+                    0.03169617559567002
+                ],
+                [
+                    "pump_age",
+                    0.028267577773661096
+                ],
+                [
+                    "gps_height",
+                    0.027639171804051656
+                ],
+                [
+                    "source_target_encoded",
+                    0.027532733355293684
+                ],
+                [
+                    "district_code_target_encoded",
+                    0.026410389077665988
+                ],
+                [
+                    "basin_target_encoded",
+                    0.023084573394311175
+                ],
+                [
+                    "population",
+                    0.020020733265906435
+                ],
+                [
+                    "scheme_management_target_encoded",
+                    0.01913577596115303
+                ],
+                [
+                    "management_target_encoded",
+                    0.017748424665938078
+                ],
+                [
+                    "water_quality_target_encoded",
+                    0.015647891855097292
+                ],
+                [
+                    "amount_tsh",
+                    0.01452558688060585
+                ],
+                [
+                    "permit",
+                    0.005506430628181838
+                ],
+                [
+                    "public_meeting",
+                    0.004369697631174088
+                ]
+            ]
+        }
+    },
+    "seed": 42
+}

@@ -1,0 +1,294 @@
+{
+    "digest": "d6a76cbd7fb874262adbd0e4a705fc31",
+    "modeling_results": {
+        "DecisionTreeClassifier": {
+            "accuracy": {
+                "train": 0.77996632996633,
+                "test": 0.7654882154882154
+            },
+            "cv_score": {
+                "train": 0.7645903479236813,
+                "test": 0.7382154882154882
+            },
+            "feature_importances": [
+                [
+                    "quantity_target_encoded",
+                    0.3376666251101103
+                ],
+                [
+                    "scheme_name_target_encoded",
+                    0.17367798882169344
+                ],
+                [
+                    "extraction_type_target_encoded",
+                    0.1318944247486092
+                ],
+                [
+                    "installer_target_encoded",
+                    0.07607472184673032
+                ],
+                [
+                    "payment_type_target_encoded",
+                    0.07142123951876596
+                ],
+                [
+                    "waterpoint_type_target_encoded",
+                    0.050432068000282416
+                ],
+                [
+                    "longitude",
+                    0.030689759303146685
+                ],
+                [
+                    "region_code_target_encoded",
+                    0.029668067534645976
+                ],
+                [
+                    "latitude",
+                    0.017394085073831812
+                ],
+                [
+                    "source_target_encoded",
+                    0.013480111072802161
+                ],
+                [
+                    "pump_age",
+                    0.013294875490658532
+                ],
+                [
+                    "basin_target_encoded",
+                    0.00938484029282461
+                ],
+                [
+                    "population",
+                    0.008697428249232243
+                ],
+                [
+                    "scheme_management_target_encoded",
+                    0.00825868077618193
+                ],
+                [
+                    "management_target_encoded",
+                    0.007371427736987655
+                ],
+                [
+                    "gps_height",
+                    0.005674016995330937
+                ],
+                [
+                    "district_code_target_encoded",
+                    0.004904130751246138
+                ],
+                [
+                    "permit",
+                    0.004749613127049098
+                ],
+                [
+                    "public_meeting",
+                    0.0021217256898615694
+                ],
+                [
+                    "amount_tsh",
+                    0.0015966439604487284
+                ],
+                [
+                    "water_quality_target_encoded",
+                    0.0015475258995600412
+                ]
+            ]
+        },
+        "RandomForestClassifier": {
+            "accuracy": {
+                "train": 0.9956603067714179,
+                "test": 0.8171717171717172
+            },
+            "cv_score": {
+                "train": 0.8112981668537225,
+                "test": 0.7723905723905724
+            },
+            "feature_importances": [
+                [
+                    "longitude",
+                    0.12923446622617943
+                ],
+                [
+                    "latitude",
+                    0.12662780520442782
+                ],
+                [
+                    "scheme_name_target_encoded",
+                    0.11549583840152702
+                ],
+                [
+                    "quantity_target_encoded",
+                    0.11547931539346086
+                ],
+                [
+                    "installer_target_encoded",
+                    0.08161164792616672
+                ],
+                [
+                    "gps_height",
+                    0.06049880441221739
+                ],
+                [
+                    "waterpoint_type_target_encoded",
+                    0.05427007691401196
+                ],
+                [
+                    "extraction_type_target_encoded",
+                    0.053422494832558676
+                ],
+                [
+                    "population",
+                    0.04289508867755876
+                ],
+                [
+                    "pump_age",
+                    0.04007634266092691
+                ],
+                [
+                    "payment_type_target_encoded",
+                    0.028435148436189602
+                ],
+                [
+                    "source_target_encoded",
+                    0.023227886416741145
+                ],
+                [
+                    "district_code_target_encoded",
+                    0.019671004158471277
+                ],
+                [
+                    "region_code_target_encoded",
+                    0.01960993409809892
+                ],
+                [
+                    "amount_tsh",
+                    0.018398468166352145
+                ],
+                [
+                    "basin_target_encoded",
+                    0.01572914365236767
+                ],
+                [
+                    "scheme_management_target_encoded",
+                    0.013893698441941025
+                ],
+                [
+                    "management_target_encoded",
+                    0.01382602762879793
+                ],
+                [
+                    "water_quality_target_encoded",
+                    0.013512805931055662
+                ],
+                [
+                    "permit",
+                    0.007063445681706518
+                ],
+                [
+                    "public_meeting",
+                    0.007020556739242604
+                ]
+            ]
+        },
+        "XGBClassifier": {
+            "accuracy": {
+                "train": 0.9032547699214366,
+                "test": 0.8141414141414142
+            },
+            "cv_score": {
+                "train": 0.8173961840628508,
+                "test": 0.7727272727272727
+            },
+            "feature_importances": [
+                [
+                    "quantity_target_encoded",
+                    0.2779836058616638
+                ],
+                [
+                    "scheme_name_target_encoded",
+                    0.1423964500427246
+                ],
+                [
+                    "waterpoint_type_target_encoded",
+                    0.13903337717056274
+                ],
+                [
+                    "extraction_type_target_encoded",
+                    0.05729757994413376
+                ],
+                [
+                    "installer_target_encoded",
+                    0.04979527369141579
+                ],
+                [
+                    "source_target_encoded",
+                    0.03781232237815857
+                ],
+                [
+                    "basin_target_encoded",
+                    0.030148053541779518
+                ],
+                [
+                    "region_code_target_encoded",
+                    0.027671122923493385
+                ],
+                [
+                    "payment_type_target_encoded",
+                    0.0258364025503397
+                ],
+                [
+                    "scheme_management_target_encoded",
+                    0.020882895216345787
+                ],
+                [
+                    "district_code_target_encoded",
+                    0.019992893561720848
+                ],
+                [
+                    "amount_tsh",
+                    0.01902066357433796
+                ],
+                [
+                    "permit",
+                    0.018864212557673454
+                ],
+                [
+                    "management_target_encoded",
+                    0.018784012645483017
+                ],
+                [
+                    "pump_age",
+                    0.018369009718298912
+                ],
+                [
+                    "longitude",
+                    0.0180206336081028
+                ],
+                [
+                    "public_meeting",
+                    0.01707339473068714
+                ],
+                [
+                    "latitude",
+                    0.01635221391916275
+                ],
+                [
+                    "water_quality_target_encoded",
+                    0.015015790238976479
+                ],
+                [
+                    "gps_height",
+                    0.014890605583786964
+                ],
+                [
+                    "population",
+                    0.014759532175958157
+                ]
+            ]
+        }
+    },
+    "seed": 42
+}

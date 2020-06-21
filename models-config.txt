@@ -68,7 +68,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             "array": [
                 {
@@ -83,12 +83,17 @@
                             "max_features": ["auto", "sqrt", "log2"]
                         },
 
-                        //don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        //      these will be used when ['DecisionTreeClassifier']['trials']['run']==true AND ['DecisionTreeClassifier']['trials']['array'][n]['gridsearch']['run']==false
+                        //          in this way, we can turn on/off gridsearch for individual trials
+                        //
+                        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
                         "last_best": {   
-                            "criterion": "entropy",
-                            "max_depth": 75,
-                            "max_features": "sqrt",
+                            "criterion": "gini",
+                            "max_depth": 10,
+                            "max_features": "auto",
                             "min_samples_split": 2,
+                            "random_state": 42,
                             "splitter": "best"
                         }
                     }
@@ -96,13 +101,16 @@
             ]
         },
 
-        //these will be used when trials['run']==false
-        "params": {
-            "criterion": "entropy", 
-            "splitter": "best",
-            "max_depth": null,
+        // these will be used when ['DecisionTreeClassifier']['trials']['run']==false
+        //
+        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
+        "params": {   
+            "criterion": "gini",
+            "max_depth": 10,
+            "max_features": "auto",
             "min_samples_split": 2,
-            "max_features": "sqrt"
+            "random_state": 42,
+            "splitter": "best"
         }
     },
 
@@ -110,7 +118,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             "array": [
                 {
@@ -125,7 +133,11 @@
                             "n_estimators": [100, 500, 1000]
                         },
 
-                        //don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        //      these will be used when ['RandomForestClassifier']['trials']['run']==true AND ['RandomForestClassifier']['trials']['array'][n]['gridsearch']['run']==false
+                        //          in this way, we can turn on/off gridsearch for individual trials
+                        //
+                        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
                         "last_best": {   
                             "bootstrap": false,
                             "criterion": "gini",
@@ -138,7 +150,10 @@
             ]
         },
 
-        //these will be used when trials['run']==false
+        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+        //      these will be used when ['DecisionTreeClassifier']['trials']['run']==false
+        //
+        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
         "params": {   
             "bootstrap": false,
             "criterion": "gini",
@@ -152,7 +167,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
@@ -181,22 +196,35 @@
                             "gamma": [0, 1, 2, 5]
                         },
 
-                        "last_best": {
-                            "n_estimators": 100
+                        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+                        //      these will be used when ['XGBClassifier']['trials']['run']==true AND ['XGBClassifier']['trials']['array'][n]['gridsearch']['run']==false
+                        //          in this way, we can turn on/off gridsearch for individual trials
+                        //
+                        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
+                        "last_best": {   
+                            "gamma": 2,
+                            "learning_rate": 0.1,
+                            "max_depth": 22,
+                            "min_child_weight": 1,
+                            "n_estimators": 100,
+                            "n_jobs": -1
                         }
                     }
                 }
             ]
         },
 
-        //these will be used when trials['run']==false
-        "params": {
+        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
+        //      these will be used when ['XGBClassifier']['trials']['run']==false
+        //
+        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
+        "params": {   
+            "gamma": 2,
             "learning_rate": 0.1,
-            "max_depth": 5,
+            "max_depth": 22,
             "min_child_weight": 1,
-            "subsample": 1.0,
-            "gamma": 0,
-            "n_estimators": 1000
+            "n_estimators": 100,
+            "n_jobs": -1
         }
     }
 }
