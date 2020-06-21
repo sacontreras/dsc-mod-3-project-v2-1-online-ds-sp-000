@@ -243,7 +243,7 @@ class LabelEncodingTransformer(object):
         return self.transform(X)
 
 
-# referenced from https://github.com/brendanhasz/target-encoding/blob/master/Target_Encoding.ipynb
+# adapted from https://github.com/brendanhasz/target-encoding/blob/master/Target_Encoding.ipynb
 class TargetEncoderTransformer(BaseEstimator, TransformerMixin):
     """Target encoder.
     
@@ -350,8 +350,204 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
     """Leave-one-out target encoder.
     """
     
-    def __init__(self, n_splits=3, shuffle=True, cols=None):
+    def __init__(self, n_splits=3, shuffle=True, cols=None, post_encode_null_to_global_mean=True, debug=False):
         """Leave-one-out target encoding for categorical features.
+        
+        Parameters
+        ----------
+        cols : list of str
+            Columns to target encode.
+        """
+        self.cols = cols
+        self.debug = debug
+        self.post_encode_null_to_global_mean = post_encode_null_to_global_mean
+        
+
+    def fit(self, X, y):
+        """Fit leave-one-out target encoder to X and y
+        
+        Parameters
+        ----------
+        X : pandas DataFrame, shape [n_samples, n_columns]
+            DataFrame containing columns to target encode
+        y : pandas Series, shape = [n_samples]
+            Target values.
+            
+        Returns
+        -------
+        self : encoder
+            Returns self.
+        """
+        
+        # Encode all categorical cols by default
+        if self.cols is None:
+            self.cols = [col for col in X if str(X[col].dtype)=='object']
+
+        # Check columns are in X
+        for col in self.cols:
+            if col not in X:
+                raise ValueError('Column \''+col+'\' not in X')
+
+        # Encode each element of each column
+        self.sum_count = dict() #dict for sum + counts for each column
+        self.idx = {}
+        for col in self.cols:
+            self.sum_count[col] = dict()
+            
+            # S.C.
+            self.idx[col] = {}
+            
+            unique_cats = X[col].unique()
+            for cat in unique_cats:
+                col_cat_mask = X[col]==cat
+                
+                # S.C.
+                self.idx[col][cat] = X[col_cat_mask].index
+                
+                self.sum_count[col][cat] = (y[col_cat_mask].sum(), col_cat_mask.sum())
+            
+        # S.C.: add global mean
+        self.target_global_mean = y.mean()
+            
+        # Return the fit object
+        return self
+
+    def transform(self, X, y=None):
+        """Perform the target encoding transformation.
+
+        Uses leave-one-out target encoding for the training fold, and
+        uses normal target encoding for the test fold.
+
+        Parameters
+        ----------
+        X : pandas DataFrame, shape [n_samples, n_columns]
+            DataFrame containing columns to encode
+
+        Returns
+        -------
+        pandas DataFrame
+            Input DataFrame with transformed columns
+        """
+        
+        # Create output dataframe
+        Xo = X.copy()
+        
+        self.transform_null_index = {}
+        self.transform_unique_cats = {}
+        self.transform_unfit_cats = {}
+
+        # Use normal target encoding if this is test data
+        if y is None:
+            print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: NOT using Leave-One-Out")
+            
+            for col in self.sum_count:
+                # S.C.: added to track null index after target encoding for this col
+                self.transform_null_index[col] = pd.Index([])
+                
+                vals = np.full(X.shape[0], np.nan)
+                
+                unique_cats = sorted(list(X[col].unique()))
+                self.transform_unique_cats[col] = unique_cats
+                unfit_cats = sorted(list(set(unique_cats) - set(self.sum_count[col].keys())))
+                self.transform_unfit_cats[col] = unfit_cats
+                if len(unfit_cats) > 0:
+                    print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
+                else:
+                    print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
+                
+                for cat, sum_count in self.sum_count[col].items():
+                    col_cat_mask = X[col]==cat
+                    
+                    if self.debug and sum_count[1] == 0:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM DEBUG **: sum_count[1]==0 for category '{cat}'")
+                    
+                    vals[col_cat_mask] = sum_count[0]/sum_count[1]
+                    
+                Xo[col] = vals
+                
+                # S.C.: replace null with target global mean
+                null_mask = Xo[col].isna()==True
+                n_null = len(Xo[null_mask])
+                if n_null > 0:
+                    self.transform_null_index[col] = Xo[null_mask].index
+                    s_warning = f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: feat '{col}' has {n_null} nan values after target encoding"
+                    s_warning += f"; replacing these with last fit target global mean: {self.target_global_mean}" if self.post_encode_null_to_global_mean else " but post_encode_null_to_global_mean is False"
+                    print(s_warning)
+                    if self.post_encode_null_to_global_mean:
+                        Xo[col].fillna(self.target_global_mean, inplace=True)
+
+        # LOO target encode each column
+        else:
+            print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: using Leave-One-Out")
+            
+            _classes = y.unique()
+            
+            for col in self.sum_count:
+                # S.C.: added to track null index after target encoding for this col
+                self.transform_null_index[col] = pd.Index([])
+                
+                vals = np.full(X.shape[0], np.nan)
+                
+                unique_cats = sorted(list(X[col].unique()))
+                self.transform_unique_cats[col] = unique_cats
+                unfit_cats = sorted(list(set(unique_cats) - set(self.sum_count[col].keys())))
+                self.transform_unfit_cats[col] = unfit_cats
+                if len(unfit_cats) > 0:
+                    print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
+                else:
+                    print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
+                
+                for cat, sum_count in self.sum_count[col].items():
+                    col_cat_mask = X[col]==cat
+                    
+                    # for debug only
+                    if self.debug and sum_count[1] == 1:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM DEBUG **: for col '{col}', category '{cat}', sum_count[1] == 1")
+                        for _class in _classes:
+                            col_cat_class_mask = y[(col_cat_mask)]==_class
+                            print(f"\tclass {_class} count: {len(col_cat_class_mask)}")
+                        
+                    vals[col_cat_mask] = (sum_count[0]-y[col_cat_mask])/(sum_count[1]-1)
+                Xo[col] = vals
+                
+                # S.C.: replace null with target global mean
+                n_null = len(Xo[Xo[col].isna()==True])
+                if n_null > 0:
+                    self.transform_null_index[col] = Xo[Xo[col].isna()==True].index
+                    s_warning = f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: feat '{col}' has {n_null} nan values after target encoding"
+                    s_warning += f"; replacing these with last fit target global mean: {self.target_global_mean}" if self.post_encode_null_to_global_mean else " but post_encode_null_to_global_mean is False"
+                    print(s_warning)
+                    if self.post_encode_null_to_global_mean:
+                        Xo[col].fillna(self.target_global_mean, inplace=True)
+            
+        # Return encoded DataFrame
+        return Xo
+      
+            
+    def fit_transform(self, X, y=None):
+        """Fit and transform the data via target encoding.
+        
+        Parameters
+        ----------
+        X : pandas DataFrame, shape [n_samples, n_columns]
+            DataFrame containing columns to encode
+        y : pandas Series, shape = [n_samples]
+            Target values (required!).
+
+        Returns
+        -------
+        pandas DataFrame
+            Input DataFrame with transformed columns
+        """
+        return self.fit(X, y).transform(X, y)
+
+
+class TargetEncoderKFoldTransformer(TargetEncoderTransformer):
+    """K-Fold target encoder.
+    """
+    
+    def __init__(self, n_splits=3, shuffle=True, cols=None):
+        """K-Fold target encoding for categorical features.
         
         Parameters
         ----------
@@ -362,7 +558,7 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
         
 
     def fit(self, X, y):
-        """Fit leave-one-out target encoder to X and y
+        """Fit K-Fold target encoder to X and y
         
         Parameters
         ----------
@@ -397,61 +593,3 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
             
         # Return the fit object
         return self
-
-    def transform(self, X, y=None):
-        """Perform the target encoding transformation.
-
-        Uses leave-one-out target encoding for the training fold, and
-        uses normal target encoding for the test fold.
-
-        Parameters
-        ----------
-        X : pandas DataFrame, shape [n_samples, n_columns]
-            DataFrame containing columns to encode
-
-        Returns
-        -------
-        pandas DataFrame
-            Input DataFrame with transformed columns
-        """
-        
-        # Create output dataframe
-        Xo = X.copy()
-
-        # Use normal target encoding if this is test data
-        if y is None:
-            for col in self.sum_count:
-                vals = np.full(X.shape[0], np.nan)
-                for cat, sum_count in self.sum_count[col].items():
-                    vals[X[col]==cat] = sum_count[0]/sum_count[1]
-                Xo[col] = vals
-
-        # LOO target encode each column
-        else:
-            for col in self.sum_count:
-                vals = np.full(X.shape[0], np.nan)
-                for cat, sum_count in self.sum_count[col].items():
-                    ix = X[col]==cat
-                    vals[ix] = (sum_count[0]-y[ix])/(sum_count[1]-1)
-                Xo[col] = vals
-            
-        # Return encoded DataFrame
-        return Xo
-      
-            
-    def fit_transform(self, X, y=None):
-        """Fit and transform the data via target encoding.
-        
-        Parameters
-        ----------
-        X : pandas DataFrame, shape [n_samples, n_columns]
-            DataFrame containing columns to encode
-        y : pandas Series, shape = [n_samples]
-            Target values (required!).
-
-        Returns
-        -------
-        pandas DataFrame
-            Input DataFrame with transformed columns
-        """
-        return self.fit(X, y).transform(X, y)

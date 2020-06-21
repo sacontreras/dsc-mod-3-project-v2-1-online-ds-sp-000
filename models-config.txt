@@ -1,4 +1,15 @@
 {
+    "logging": {
+        "dir": "model-results"
+    },
+
+    "cross_validation": {
+        "k": {
+            "grid_search": 3,
+            "score": 5
+        }
+    },
+    
     "dask": {
         "use": false,
 
@@ -54,7 +65,7 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,
@@ -62,7 +73,7 @@
             "array": [
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
                             "criterion": ["entropy", "gini"], 
@@ -73,12 +84,12 @@
                         },
 
                         //don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
-                        "last_best": {
-                            "criterion": "entropy", 
-                            "splitter": "best",
-                            "max_depth": null,
+                        "last_best": {   
+                            "criterion": "entropy",
+                            "max_depth": 75,
+                            "max_features": "sqrt",
                             "min_samples_split": 2,
-                            "max_features": "sqrt"
+                            "splitter": "best"
                         }
                     }
                 }
@@ -96,7 +107,7 @@
     },
 
     "RandomForestClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,
@@ -104,7 +115,7 @@
             "array": [
                 {
                     "gridsearch": {
-                        "run": false,
+                        "run": true,
 
                         "param_grid": {
                             "bootstrap": [true, false], 
@@ -115,9 +126,9 @@
                         },
 
                         //don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
-                        "last_best": {
-                            "bootstrap": true,
-                            "criterion": "entropy",
+                        "last_best": {   
+                            "bootstrap": false,
+                            "criterion": "gini",
                             "max_depth": 75,
                             "max_features": "auto",
                             "n_estimators": 1000
@@ -128,9 +139,9 @@
         },
 
         //these will be used when trials['run']==false
-        "params": {
-            "bootstrap": true,
-            "criterion": "entropy",
+        "params": {   
+            "bootstrap": false,
+            "criterion": "gini",
             "max_depth": 75,
             "max_features": "auto",
             "n_estimators": 1000
@@ -141,97 +152,37 @@
         "run": true,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
-                // n_estimators tuning
                 {
                     "gridsearch": {
                         "run": true,
 
                         "param_grid": {
-                            "n_estimators": [100, 500, 750, 1000]
+                            // 100 is default
+                            "n_estimators": [100, 1000],
+
+                            // 10 is default - we check depth 6 just in case
+                            "max_depth": [6, 10, 22], 
+
+                            // 0.1 is default
+                            "learning_rate": [0.1, 0.3],
+
+                            // 1 is default
+                            "min_child_weight": [1, 3, 5],
+
+                            // 1 is default
+                            // I have never seen GridSearch use a value other than default, so we will just assume parameterizing this is not much use in our case
+                            //"subsample": [0.1, 0.25, 0.5, 1.0],
+
+                            // 0 is default
+                            "gamma": [0, 1, 2, 5]
                         },
 
                         "last_best": {
                             "n_estimators": 100
-                        }
-                    }
-                },
-
-                // max_depth tuning
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        // try with number of features
-                        "param_grid": {
-                            "max_depth": [3, 5, 10, 22, 50]
-                        },
-
-                        "last_best": {
-                            "max_depth": 3
-                        }
-                    }
-                },
-
-                // learning_rate tuning
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            "learning_rate": [0.1, 0.3, 0.6, 1.0]
-                        },
-
-                        "last_best": {
-                            "learning_rate": 0.1
-                        }
-                    }
-                },
-
-                // min_child_weight tuning
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            "min_child_weight": [1, 3, 5]
-                        },
-
-                        "last_best": {
-                            "min_child_weight": 1
-                        }
-                    }
-                },
-
-                // subsample tuning
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            "subsample": [0.1, 0.25, 0.5, 1.0]
-                        },
-
-                        "last_best": {
-                            "subsample": 1.0
-                        }
-                    }
-                },
-
-                // gamma tuning
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            "gamma": [0, 1, 2, 5, 10]
-                        },
-
-                        "last_best": {
-                            "gamma": 5
                         }
                     }
                 }
@@ -241,11 +192,11 @@
         //these will be used when trials['run']==false
         "params": {
             "learning_rate": 0.1,
-            "max_depth": 3,
+            "max_depth": 5,
             "min_child_weight": 1,
             "subsample": 1.0,
-            "gamma": 5,
-            "n_estimators": 100
+            "gamma": 0,
+            "n_estimators": 1000
         }
     }
 }

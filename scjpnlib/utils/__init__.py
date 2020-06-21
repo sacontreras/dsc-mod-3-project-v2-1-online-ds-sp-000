@@ -14,6 +14,7 @@ import json
 import hashlib
 import re
 import inspect
+from copy import copy, deepcopy
 
 
 
@@ -260,7 +261,8 @@ def analyze_values(
 
         for idx, feat in enumerate(feats):
             ax = fig.add_subplot(r_n, c_n, idx+1)
-            df[feat].value_counts()[:count_top_thresh].plot(kind='bar')
+            # df[feat].value_counts()[:count_top_thresh].plot(kind='bar')
+            sns.distplot(df[feat].value_counts()[:count_top_thresh], bins=count_top_thresh)
             ax.set_title(feat)
 
         fig.tight_layout()
@@ -280,7 +282,7 @@ def helper__display_complement_from_duplicates_entries(duplicates_entries, df_co
     for duplicates_entry in duplicates_entries:
         duplicates_df = duplicates_entry[0]
         feat_combo = duplicates_entry[1]
-        display(HTML(f"first {n_show} rows where <b>{feat_combo}</b> differ in X_labeled_clean:"))
+        display(HTML(f"first {n_show} rows where <b>{feat_combo}</b> differ:"))
         display(HTML(df_complement_in.loc[~df_complement_in.index.isin(duplicates_df.index)][[feat_combo[0], feat_combo[1]]].head(n_show).to_html()))
         display(HTML(f"<p><br>"))
 
@@ -775,7 +777,11 @@ def analyze_distributions(
         if percentile==100 and not suppress_100th_percentile_display and not suppress_output:
             display(HTML("<br><br>"))
             plt.figure(figsize=fs)
-            plt.hist(df[feat], bins=n_all_unique)
+            # plt.hist(df[feat], bins=n_all_unique)
+            if df[feat].dtype==object:
+                sns.countplot(df[feat])
+            else:
+                sns.distplot(df[feat], bins=n_all_unique)
             # plt.gca().set_xlim(left=df[feat].min(), right=df[feat].max())
             plt.xticks(rotation=90)
             if n_all_unique > 100:
@@ -1152,3 +1158,28 @@ def convert_col_to_date_type(df, feat, format="%Y-%m-%d"):
     df_copy = df.copy()
     df_copy[feat] = pd.to_datetime(df_copy[feat], format=format)
     return df_copy
+
+
+def scatter_plot_group_by(df, feat, groupby):
+    plt.figure()
+    plt.scatter(df[feat], df[groupby])
+    plt.show()
+
+def update_df_from_other(df_dest, df_src, feat):
+    df_dest[feat] = df_src[feat]
+    return df_dest    
+
+
+
+def pipeline__fit(pipeline_to_copy, X_to_fit, y_to_fit):
+    pipeline = copy(pipeline_to_copy)
+    return pipeline.fit(X_to_fit, y_to_fit) # returns pipeline
+
+def pipeline__transform(pipeline, X_to_transform):
+    return pipeline.transform(X_to_transform)   # returns transformed version of X_to_transform
+
+def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform=None):
+    pipeline = pipeline__fit(pipeline_to_copy, X_to_fit, y_to_fit)
+    return pipeline__transform(pipeline, X_to_transform if X_to_transform is not None else X_to_fit)
+    
+    
