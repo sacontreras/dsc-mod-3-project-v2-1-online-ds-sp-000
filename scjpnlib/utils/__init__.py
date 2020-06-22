@@ -15,6 +15,7 @@ import hashlib
 import re
 import inspect
 from copy import copy, deepcopy
+import importlib
 
 
 
@@ -477,6 +478,7 @@ def analyze_outliers_detailed(
     n_unique_top_percentile = df_feat_value_analysis[f'n_unique_top_{top_percentile}_percent'].values[0]
     n_pop_rep = df_feat_value_analysis['n_pop_rep'].values[0]
     n_top_percentile = df_feat_value_analysis[f'n_top_{top_percentile}_percent'].values[0]
+    index_top_percentile = df_feat_value_analysis[f'index_top_{top_percentile}_percent'].values[0]
     val_count_top_percentile = df_feat_value_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
 
     display(HTML(f"q1 of <b>{feat}</b> is: {q1}"))
@@ -489,14 +491,15 @@ def analyze_outliers_detailed(
     display(HTML(f"{n_unique_top_percentile} value(s) (out of {n_unique} unique) of <b>{feat}</b> constitute {round(n_pop_rep*100,2)}% of the total number of observations ({n_top_percentile} out of {l})"))
     if not suppress_values_display:
         display(HTML("values are:"))
-    top_percentile_vals = []
+    top_percentile_unique_vals = []
     for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
-        top_percentile_vals.append(val)
+        top_percentile_unique_vals.append(val)
         if not suppress_values_display:
             display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
-    display(HTML(f"mean of top {top_percentile}th percentile values: {np.mean(top_percentile_vals)}"))
-    display(HTML(f"median of top {top_percentile}th percentile values: {np.median(top_percentile_vals)}"))
-    display(HTML(f"mode of top {top_percentile}th percentile values: {top_percentile_vals[0]}"))
+    top_percentile_observations = df.loc[index_top_percentile]
+    display(HTML(f"mean of top {top_percentile}th percentile values: {top_percentile_observations[feat].mean()}"))
+    display(HTML(f"median of top {top_percentile}th percentile values: {top_percentile_observations[feat].median()}"))
+    display(HTML(f"mode of top {top_percentile}th percentile values: {top_percentile_observations[feat].mode()[0]}"))
 
     best_improvement_strategy = (None, n_outliers, 0)
     best_replace_outliers_rules = None
@@ -599,6 +602,27 @@ def analyze_outliers_detailed(
         display(HTML(f"<br><h3>outlier-analysis recommendation: <b>{'replace <i>'+feat+'</i> outlier values with <u>'+best_improvement_strategy[0]+'</u>' if best_improvement_strategy[0] is not None else 'drop this feature'}</b></h3>"))
 
     return outliers_index, best_replace_outliers_rules, all_replace_outliers_rules
+
+def analyze_outliers_grouped_by(df, feat, group_by, suppress_header=False):
+    # the "header"
+    if not suppress_header:
+        display(HTML(df.groupby(group_by)[feat].describe().to_html(notebook=True, justify='left')))
+        display(HTML("<p/><br/>"))
+        scatter_plot_group_by(df, feat, group_by)
+        display(HTML("<p/><br/>"))
+
+    display(HTML("<p/><br/>"))
+    classes = list(df[group_by].unique())
+    for _class in classes:
+        display(HTML(f"<h2>Outlier-replacement Strategy analysis of <i>{feat}</i> for <i>{group_by}</i> class '<font color='blue'>{_class}</font>'</h2>"))
+        analyze_outliers_detailed(
+            df.query(f"{group_by}=='{_class}'"), 
+            f"df.query(\"{group_by}=='{_class}'\")", 
+            feat, 
+            top_percentile=100, 
+            outlier_ratio_reduction_threshold=.10
+        );
+        display(HTML("<p/><br/><br/><br/>"))
 
 
 def analyze_non_alphanumeric_strings(df, df_name, truncate_output_threshold=50, suppress_output=False):
@@ -954,6 +978,24 @@ def analyze_distributions__top_n(
 
     return result_by_top_n
 
+def analyze_distributions_grouped_by(df, feat, group_by, suppress_header=False):
+    # the "header"
+    if not suppress_header:
+        display(HTML(df.groupby(group_by)[feat].describe().to_html(notebook=True, justify='left')))
+        display(HTML("<p/><br/>"))
+        scatter_plot_group_by(df, feat, group_by)
+        display(HTML("<p/><br/>"))
+
+    classes = list(df[group_by].unique())
+    for _class in classes:
+        display(HTML(f"<h2>Distributions analysis of <i>{feat}</i> for <i>{group_by}</i> class '<font color='blue'>{_class}</font>'</h2>"))
+        analyze_distributions(
+            df.query(f"{group_by}=='{_class}'"), 
+            f"df.query(\"{group_by}=='{_class}'\")", 
+            feat
+        );
+        display(HTML("<p/><br/><br/><br/>"))
+
 
 def helper__summarize_categorical_reduction(result, feat, sig, map_to):
     n_unique_before = len(result[100]['sig'][0])
@@ -1181,5 +1223,12 @@ def pipeline__transform(pipeline, X_to_transform):
 def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform=None):
     pipeline = pipeline__fit(pipeline_to_copy, X_to_fit, y_to_fit)
     return pipeline__transform(pipeline, X_to_transform if X_to_transform is not None else X_to_fit)
-    
-    
+
+
+def instantiate_strategy_transfomer(strategy_class_name, feat, pipeline):
+    StratClass = getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_class_name)
+    return StratClass(feat, pipeline, verbose=True)
+
+def strategy_transform(strategy_class_name, feat, pipeline, X):
+    oStratClass = instantiate_strategy_transfomer(strategy_class_name, feat, pipeline)
+    return oStratClass.transform(X), oStratClass

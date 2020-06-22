@@ -65,10 +65,10 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             "array": [
                 {
@@ -115,10 +115,10 @@
     },
 
     "RandomForestClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             "array": [
                 {
@@ -167,7 +167,7 @@
         "run": true,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [

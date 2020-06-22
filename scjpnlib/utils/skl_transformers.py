@@ -541,6 +541,19 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
         """
         return self.fit(X, y).transform(X, y)
 
+# helper functions
+def fit_target_encoder(feat, X, y_target_label_encoded, post_encode_null_to_global_mean=True):
+    target_encoder = TargetEncoderLOOTransformer(cols=[feat], post_encode_null_to_global_mean=post_encode_null_to_global_mean)
+    return target_encoder.fit(X, y_target_label_encoded)
+
+def target_encoder_transform(target_encoder, feat, X, y_target_label_encoded=None):
+    X_feat_encoded = target_encoder.transform(X, y_target_label_encoded)
+    feat_target_encoded = f"{feat}_target_encoded"
+    X_feat_encoded[feat_target_encoded] = X_feat_encoded[feat]
+    X_feat_encoded[feat] = X[feat]
+    print(f"added new feature: {feat_target_encoded}")
+    return X_feat_encoded
+
 
 class TargetEncoderKFoldTransformer(TargetEncoderTransformer):
     """K-Fold target encoder.

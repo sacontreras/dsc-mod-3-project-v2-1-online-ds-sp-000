@@ -28,11 +28,23 @@
     "SEED": 42,
     
     "target_encoding": {
+        // note for setting post_encode_null_to_global_mean to true
+        //  1. results in precluding the use of tree classifiers that cannot handle nulls - hence only XGBClassifier can be used in this case!
+        //  2. more importantly, accuracy seems to drop
         "post_encode_null_to_global_mean": true,
         
         "train": {
             "leave_one_out": false
         }
+    },
+
+    "transformation_strategies": {
+        //"amount_tsh": "C__leave_it_as_is__StrategyTransformer"
+        //"amount_tsh": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //"amount_tsh": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //"amount_tsh": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //"amount_tsh": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        "amount_tsh": "C__replace_0_with_nan__StrategyTransformer" /*** BEST ACCURACY ***/
     },
 
     "wrangled_data": {
