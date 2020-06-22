@@ -27,25 +27,105 @@
     //the random_state seed used throughout the project
     "SEED": 42,
     
-    "target_encoding": {
-        // note for setting post_encode_null_to_global_mean to true
-        //  1. results in precluding the use of tree classifiers that cannot handle nulls - hence only XGBClassifier can be used in this case!
-        //  2. more importantly, accuracy seems to drop
-        "post_encode_null_to_global_mean": true,
-        
-        "train": {
-            "leave_one_out": false
-        }
-    },
 
-    "transformation_strategies": {
+
+
+    "variable_transformation_strategies": {
+        // amount_tsh is continuous/categorical-ordinal, so options are as follows
         //"amount_tsh": "C__leave_it_as_is__StrategyTransformer"
+        "amount_tsh": "C__drop_it__StrategyTransformer" /*** BEST ACCURACY ***/
         //"amount_tsh": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
         //"amount_tsh": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
         //"amount_tsh": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
         //"amount_tsh": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        "amount_tsh": "C__replace_0_with_nan__StrategyTransformer" /*** BEST ACCURACY ***/
+        //"amount_tsh": "C__replace_0_with_nan__StrategyTransformer"
+        //"amount_tsh": "C__replace_outliers_with_mean__StrategyTransformer"
+        //"amount_tsh": "C__replace_outliers_with_median__StrategyTransformer"
+
+        // funder is categorical/string, so leaving it as is is not an option; options are as follows
+        , "funder": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "funder": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "funder": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "funder": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "installer": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "installer": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "installer": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "installer": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "basin": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "basin": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "basin": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "basin": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "region_code": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "region_code": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "region_code": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "region_code": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "district_code": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "district_code": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "district_code": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "district_code": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        //, "population": "C__leave_it_as_is__StrategyTransformer"
+        //, "population": "C__drop_it__StrategyTransformer"
+        //, "population": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "population": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "population": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "population": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "population": "C__replace_0_with_nan__StrategyTransformer"
+        , "population": "C__replace_outliers_with_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "population": "C__replace_outliers_with_median__StrategyTransformer"
+
+        , "scheme_management": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "scheme_management": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "scheme_management": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "scheme_management": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "scheme_name": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "scheme_name": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "scheme_name": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "scheme_name": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "extraction_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "extraction_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "extraction_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "extraction_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "management": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "management": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "management": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "management": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "payment_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "payment_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "payment_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "payment_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "water_quality": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "water_quality": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "water_quality": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "water_quality": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "quantity": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "quantity": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "quantity": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "quantity": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "source": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "source": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "source": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "source": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+
+        , "waterpoint_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
+        //, "waterpoint_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        //, "waterpoint_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        //, "waterpoint_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
     },
+
+
+
 
     "wrangled_data": {
         "dir": "preprocessing-results",

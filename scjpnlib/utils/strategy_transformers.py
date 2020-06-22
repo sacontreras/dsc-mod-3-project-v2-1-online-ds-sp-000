@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from . import impute_TO_nan
+from . import impute_TO_nan, analyze_outliers_detailed
 from sklearn.preprocessing import FunctionTransformer
-from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer
+from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
 
 class CBaseStrategyTransformer():
     def __init__(self, feat, pipeline_data_preprocessor, description, verbose=False):
@@ -11,16 +11,18 @@ class CBaseStrategyTransformer():
         self.verbose = verbose
 
     @abstractmethod
-    def get_transformer(self, X, y=None):
+    def get_transformer(self, X, y=None): # fitting should occur in the override
         pass
 
     def fit(self, X, y=None):
         self.transformer = self.get_transformer(X, y)
+
         if self.pipeline_data_preprocessor is not None:
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
             self.pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
                 print(f"{self.pipeline_step} appended to pipeline")
+
         return self
 
     def transform(self, X):
@@ -50,6 +52,21 @@ class C__leave_it_as_is__StrategyTransformer(CBaseStrategyTransformer):
 
 
 
+class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__drop_it__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"drop feature {feat}",
+            verbose=verbose
+        )
+
+    def get_transformer(self, X, y=None):
+        return DropColumnsTransformer(self.feat)
+
+
+
+
 class C__replace_0_with_nan__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
         super(C__replace_0_with_nan__StrategyTransformer, self).__init__(
@@ -62,6 +79,44 @@ class C__replace_0_with_nan__StrategyTransformer(CBaseStrategyTransformer):
     def get_transformer(self, X, y=None):
         return FunctionTransformer(lambda X: impute_TO_nan(X, self.feat, 0), validate=False)
 
+
+
+class C__replace_outliers__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, replacement_strategy, pipeline_data_preprocessor, verbose=False):
+        super(C__replace_outliers__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"replace {feat} outliers with {replacement_strategy}",
+            verbose=verbose
+        )
+        self.replacement_strategy = replacement_strategy
+        
+    def get_transformer(self, X, y=None):
+        _, _, all_replace_outliers_rules = analyze_outliers_detailed(X, '', self.feat, suppress_output=True)
+        if self.replacement_strategy in all_replace_outliers_rules:
+            replacement_rules = all_replace_outliers_rules[self.replacement_strategy]
+            return SimpleValueTransformer(replacement_rules)
+        else:
+            return FunctionTransformer(lambda X: X, validate=False) # leave it as is
+
+# specializations of C__replace_outliers__StrategyTransformer: differences are based on replacement_strategy
+class C__replace_outliers_with_mean__StrategyTransformer(C__replace_outliers__StrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__replace_outliers_with_mean__StrategyTransformer, self).__init__(
+            feat, 
+            'mean',
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__replace_outliers_with_median__StrategyTransformer(C__replace_outliers__StrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__replace_outliers_with_median__StrategyTransformer, self).__init__(
+            feat, 
+            'median',
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
 
 
 

@@ -369,7 +369,7 @@ def analyze_outliers(df, df_name, iqr_factor=1.5, feats=None, display_plots=True
     if feats is None:
         feats = list(df.columns)
 
-    if display_plots:
+    if not suppress_output and display_plots:
         n_feats = len(feats)
         r_w = 4*plot_edge if n_feats > plot_edge else (n_feats*4 if n_feats > 1 else plot_edge)
         r_h = plot_edge if n_feats > 4 else (plot_edge if n_feats > 1 else plot_edge)
@@ -396,7 +396,7 @@ def analyze_outliers(df, df_name, iqr_factor=1.5, feats=None, display_plots=True
                 'outliers_index': feat_outliers_index
             }]
             df_outlier_analysis = df_outlier_analysis.append(data, ignore_index=True, sort=False)
-            if display_plots:
+            if not suppress_output and display_plots:
                 ax = fig.add_subplot(r_n, c_n, idx+1)
                 df[[feat]].boxplot()
         else:
@@ -448,7 +448,8 @@ def analyze_outliers_detailed(
     outlier_ratio_reduction_threshold=.10,
     suppress_replacement_strat_analysis=False,
     suppress_values_display=True,
-    suppress_candidate_head=True
+    suppress_candidate_head=True,
+    suppress_output=False
 ):
     l = len(df)
     df_analysis, _ = analyze_values(
@@ -462,8 +463,7 @@ def analyze_outliers_detailed(
     unique_vals = df[feat].unique()
     n_unique = len(unique_vals)
 
-    # df_outliers = analyze_outliers(df, df_name, display_plots=False, suppress_output=True)
-    df_outliers = analyze_outliers(df[[feat]], f"{df_name} <i>{feat}</i>",  plot_edge=3)
+    df_outliers = analyze_outliers(df[[feat]], f"{df_name} <i>{feat}</i>",  plot_edge=3, suppress_output=suppress_output)
     df_feat_outlier_analysis = df_outliers.loc[df_outliers['feature']==feat]
     
     q1 = df_feat_outlier_analysis['q1'].values[0]
@@ -481,25 +481,28 @@ def analyze_outliers_detailed(
     index_top_percentile = df_feat_value_analysis[f'index_top_{top_percentile}_percent'].values[0]
     val_count_top_percentile = df_feat_value_analysis[f'val_count_top_{top_percentile}_percent'].values[0]
 
-    display(HTML(f"q1 of <b>{feat}</b> is: {q1}"))
-    display(HTML(f"q3 of <b>{feat}</b> is: {q3}"))
-    display(HTML(f"count of <b>{feat}</b> outliers is: {n_outliers} (out of {l})"))
-    display(HTML(f"ratio of <b>{feat}</b> outliers is: {round(n_outliers_ratio*100,2)}%"))
-    display(HTML(f"count of UNIQUE <b>{feat}</b> outlier values is: {n_unique_outlier_vals} (out of {n_unique} unique values)"))
+    if not suppress_output:
+        display(HTML(f"q1 of <b>{feat}</b> is: {q1}"))
+        display(HTML(f"q3 of <b>{feat}</b> is: {q3}"))
+        display(HTML(f"count of <b>{feat}</b> outliers is: {n_outliers} (out of {l})"))
+        display(HTML(f"ratio of <b>{feat}</b> outliers is: {round(n_outliers_ratio*100,2)}%"))
+        display(HTML(f"count of UNIQUE <b>{feat}</b> outlier values is: {n_unique_outlier_vals} (out of {n_unique} unique values)"))
 
-    display(HTML("<br>"))
-    display(HTML(f"{n_unique_top_percentile} value(s) (out of {n_unique} unique) of <b>{feat}</b> constitute {round(n_pop_rep*100,2)}% of the total number of observations ({n_top_percentile} out of {l})"))
-    if not suppress_values_display:
-        display(HTML("values are:"))
+        display(HTML("<br>"))
+        display(HTML(f"{n_unique_top_percentile} value(s) (out of {n_unique} unique) of <b>{feat}</b> constitute {round(n_pop_rep*100,2)}% of the total number of observations ({n_top_percentile} out of {l})"))
+        if not suppress_values_display:
+            display(HTML("values are:"))
+
     top_percentile_unique_vals = []
     for val, val_count_data in val_count_top_percentile.items(): # yields: val, (count, ratio-of-population)
         top_percentile_unique_vals.append(val)
-        if not suppress_values_display:
+        if not suppress_output and not suppress_values_display:
             display(HTML(f"{helper__HTML_tabs(1)}{val}{': '+str(round(val_count_data[1]*100,2))+'%' if len(val_count_top_percentile)>1 else ''}"))
     top_percentile_observations = df.loc[index_top_percentile]
-    display(HTML(f"mean of top {top_percentile}th percentile values: {top_percentile_observations[feat].mean()}"))
-    display(HTML(f"median of top {top_percentile}th percentile values: {top_percentile_observations[feat].median()}"))
-    display(HTML(f"mode of top {top_percentile}th percentile values: {top_percentile_observations[feat].mode()[0]}"))
+    if not suppress_output:
+        display(HTML(f"mean of top {top_percentile}th percentile values: {top_percentile_observations[feat].mean()}"))
+        display(HTML(f"median of top {top_percentile}th percentile values: {top_percentile_observations[feat].median()}"))
+        display(HTML(f"mode of top {top_percentile}th percentile values: {top_percentile_observations[feat].mode()[0]}"))
 
     best_improvement_strategy = (None, n_outliers, 0)
     best_replace_outliers_rules = None
@@ -507,18 +510,26 @@ def analyze_outliers_detailed(
 
     # consider replacment with mean
     mean_feat = df[feat].mean()
-    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else '<br>'}"))
-    display(HTML(f"mean of all <b>{feat}</b> values is: {mean_feat}"))
+    if not suppress_output:
+        display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else '<br>'}"))
+        display(HTML(f"mean of all <b>{feat}</b> values is: {mean_feat}"))
     if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
         df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, mean_feat)
         all_replace_outliers_rules['mean'] = replace_outliers_rules
 
-        if not suppress_candidate_head:
+        if not suppress_output and not suppress_candidate_head:
             display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
             display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
 
-        df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mean: {mean_feat}) Candidate', display_plots=True, plot_edge=3)
-        display(HTML(df_outliers_analysis.to_html(notebook=True)))
+        df_outliers_analysis = analyze_outliers(
+            df_outlier_replacement_candidate[[feat]], 
+            f'{df_name} Outlier-replacement (with mean: {mean_feat}) Candidate', 
+            display_plots=True, 
+            plot_edge=3,
+            suppress_output=suppress_output
+        )
+        if not suppress_output:
+            display(HTML(df_outliers_analysis.to_html(notebook=True)))
         n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
         n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
         n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
@@ -532,23 +543,32 @@ def analyze_outliers_detailed(
         if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
             best_improvement_strategy = ('mean', n_new_outliers, n_new_outliers_ratio)
             best_replace_outliers_rules = replace_outliers_rules
-        display(HTML(f"<h4>replacing outliers with <u>mean</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mean' else s_fail_reason}</h4>"))
+        if not suppress_output:
+            display(HTML(f"<h4>replacing outliers with <u>mean</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mean' else s_fail_reason}</h4>"))
 
     # consider replacment with median
     median_feat = df[feat].median()
-    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
-    display(HTML(f"median of all <b>{feat}</b> values is: {median_feat}"))
+    if not suppress_output:
+        display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
+        display(HTML(f"median of all <b>{feat}</b> values is: {median_feat}"))
     if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
         if median_feat != mean_feat:
             df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, median_feat)
             all_replace_outliers_rules['median'] = replace_outliers_rules
 
-            if not suppress_candidate_head:
+            if not suppress_output and not suppress_candidate_head:
                 display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
                 display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
 
-            df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with median: {median_feat}) Candidate', display_plots=True, plot_edge=3)
-            display(HTML(df_outliers_analysis.to_html(notebook=True)))
+            df_outliers_analysis = analyze_outliers(
+                df_outlier_replacement_candidate[[feat]], 
+                f'{df_name} Outlier-replacement (with median: {median_feat}) Candidate', 
+                display_plots=True, 
+                plot_edge=3, 
+                suppress_output=suppress_output
+            )
+            if not suppress_output:
+                display(HTML(df_outliers_analysis.to_html(notebook=True)))
             n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
             n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
             n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
@@ -562,25 +582,35 @@ def analyze_outliers_detailed(
             if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
                 best_improvement_strategy = ('median', n_new_outliers, n_new_outliers_ratio)
                 best_replace_outliers_rules = replace_outliers_rules
-            display(HTML(f"<h4>replacing outliers with <u>median</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='median' else s_fail_reason}</h4>"))
+            if not suppress_output:
+                display(HTML(f"<h4>replacing outliers with <u>median</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='median' else s_fail_reason}</h4>"))
         else:
-            display(HTML("(the particular-value replacement scheme was already considered above)"))
+            if not suppress_output:
+                display(HTML("(the particular-value replacement scheme was already considered above)"))
 
     # consider replacment with mode
     mode_feat = df.mode(numeric_only=True)[feat].values[0]
-    display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
-    display(HTML(f"mode of all <b>{feat}</b> values is: {mode_feat}"))
+    if not suppress_output:
+        display(HTML(f"{'<br><br><br>' if n_unique_outlier_vals>0 else ''}"))
+        display(HTML(f"mode of all <b>{feat}</b> values is: {mode_feat}"))
     if not suppress_replacement_strat_analysis and n_unique_outlier_vals > 0:
         if mode_feat != median_feat:
             df_outlier_replacement_candidate, replace_outliers_rules = replace_outliers_index(df, feat, outliers_index, mode_feat)
             all_replace_outliers_rules['mode'] = replace_outliers_rules
 
-            if not suppress_candidate_head:
+            if not suppress_output and not suppress_candidate_head:
                 display(HTML(f"{df.loc[outliers_index][[feat]].head().to_html()}"))
                 display(HTML(f"{df_outlier_replacement_candidate.loc[outliers_index][[feat]].head().to_html()}"))
 
-            df_outliers_analysis = analyze_outliers(df_outlier_replacement_candidate[[feat]], f'{df_name} Outlier-replacement (with mode: {mode_feat}) Candidate', display_plots=True, plot_edge=3)
-            display(HTML(df_outliers_analysis.to_html(notebook=True)))
+            df_outliers_analysis = analyze_outliers(
+                df_outlier_replacement_candidate[[feat]], 
+                f'{df_name} Outlier-replacement (with mode: {mode_feat}) Candidate', 
+                display_plots=True, 
+                plot_edge=3,
+                suppress_output=suppress_output
+            )
+            if not suppress_output:
+                display(HTML(df_outliers_analysis.to_html(notebook=True)))
             n_new_outliers = df_outliers_analysis['n_outliers'].values[0]
             n_new_outliers_ratio = df_outliers_analysis['n_outliers_ratio'].values[0]
             n_new_unique_vals = len(df_outlier_replacement_candidate[feat].unique())
@@ -594,11 +624,13 @@ def analyze_outliers_detailed(
             if b_fewer_outliers and b_lt_reduc_ratio and b_gt_one_val:
                 best_improvement_strategy = ('mode', n_new_outliers, n_new_outliers_ratio)
                 best_replace_outliers_rules = replace_outliers_rules
-            display(HTML(f"<h4>replacing outliers with <u>mode</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mode' else s_fail_reason}</h4>"))
+            if not suppress_output:
+                display(HTML(f"<h4>replacing outliers with <u>mode</u> {'will reduce outlier count to '+str(n_new_outliers)+' (from '+str(n_outliers)+')' if best_improvement_strategy[0]=='mode' else s_fail_reason}</h4>"))
         else:
-            display(HTML("(the particular-value replacement scheme was already considered above)"))
+            if not suppress_output:
+                display(HTML("(the particular-value replacement scheme was already considered above)"))
 
-    if n_unique_outlier_vals > 0:
+    if not suppress_output and n_unique_outlier_vals > 0:
         display(HTML(f"<br><h3>outlier-analysis recommendation: <b>{'replace <i>'+feat+'</i> outlier values with <u>'+best_improvement_strategy[0]+'</u>' if best_improvement_strategy[0] is not None else 'drop this feature'}</b></h3>"))
 
     return outliers_index, best_replace_outliers_rules, all_replace_outliers_rules
@@ -1226,9 +1258,9 @@ def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform
 
 
 def instantiate_strategy_transfomer(strategy_class_name, feat, pipeline):
-    StratClass = getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_class_name)
-    return StratClass(feat, pipeline, verbose=True)
+    StratTransformerClass = getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_class_name)
+    return StratTransformerClass(feat, pipeline, verbose=True)
 
 def strategy_transform(strategy_class_name, feat, pipeline, X):
-    oStratClass = instantiate_strategy_transfomer(strategy_class_name, feat, pipeline)
-    return oStratClass.transform(X), oStratClass
+    oStratTransformerClass = instantiate_strategy_transfomer(strategy_class_name, feat, pipeline)
+    return oStratTransformerClass.transform(X), oStratTransformerClass
