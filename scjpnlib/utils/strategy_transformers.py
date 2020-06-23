@@ -1,6 +1,6 @@
 import importlib
 from abc import ABC, abstractmethod
-from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed
+from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
 from IPython.core.display import HTML, Markdown
@@ -259,6 +259,21 @@ class C__impute_lcase__StrategyTransformer(CBaseStrategyTransformer):
         
     def get_transformer(self, X, y=None):
         return FunctionTransformer(lambda X: impute_TO_lcase(X, self.feat), validate=False)
+
+
+
+
+class C__convert_string_date_to_datetime__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__convert_string_date_to_datetime__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"convert (from string) to datetime type: {feat}",
+            verbose=verbose
+        )
+        
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: convert_col_to_date_type(X, self.feat), validate=False)
     
 
 
