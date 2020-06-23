@@ -73,7 +73,7 @@ class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
         )
 
     def get_transformer(self, X, y=None):
-        return DropColumnsTransformer(self.feat)
+        return DropColumnsTransformer([self.feat])
 
 
 
@@ -189,7 +189,7 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
 
         # now add the step to drop the original feature since we have the new target encoded feature (named f"{feat}_target_encoded"
-        dct_after_target_encode = DropColumnsTransformer(self.feat)
+        dct_after_target_encode = DropColumnsTransformer([self.feat])
         pipeline_step = None
         if self.pipeline_data_preprocessor is not None:
             self.pipeline_data_preprocessor.steps.append([f"drop after target encoding: {self.feat}", dct_after_target_encode])
@@ -305,6 +305,8 @@ def strategy_transformer_name_to_class(strategy_transformer_class_name):
 def instantiate_strategy_transformer(strategy_composition, description, pipeline):
     feat_transformer_sequence = []
     for strategy_component in strategy_composition:
+        # print(f"strategy component feat: {strategy_component[0]}")
+        # print(f"strategy component class-name: {strategy_component[1]}")
         feat_transformer_sequence.append((strategy_component[0], strategy_transformer_name_to_class(strategy_component[1])))
     return CCompositeStrategyTransformer(description, feat_transformer_sequence, pipeline, verbose=True)
 
