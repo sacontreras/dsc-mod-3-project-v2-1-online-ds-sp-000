@@ -653,7 +653,7 @@ def analyze_outliers_grouped_by(df, feat, group_by, suppress_header=False):
     if not suppress_header:
         display(HTML(df.groupby(group_by)[feat].describe().to_html(notebook=True, justify='left')))
         display(HTML("<p/><br/>"))
-        scatter_plot_group_by(df, feat, group_by)
+        plot_group_by(df, feat, group_by)
         display(HTML("<p/><br/>"))
 
     display(HTML("<p/><br/>"))
@@ -1023,12 +1023,12 @@ def analyze_distributions__top_n(
 
     return result_by_top_n
 
-def analyze_distributions_grouped_by(df, feat, group_by, suppress_header=False):
+def analyze_distributions_grouped_by(df, feat, group_by, suppress_header=False, fs=(20,10)):
     # the "header"
     if not suppress_header:
         display(HTML(df.groupby(group_by)[feat].describe().to_html(notebook=True, justify='left')))
         display(HTML("<p/><br/>"))
-        scatter_plot_group_by(df, feat, group_by)
+        plot_group_by(df, feat, group_by)
         display(HTML("<p/><br/>"))
 
     classes = list(df[group_by].unique())
@@ -1037,7 +1037,8 @@ def analyze_distributions_grouped_by(df, feat, group_by, suppress_header=False):
         analyze_distributions(
             df.query(f"{group_by}=='{_class}'"), 
             f"df.query(\"{group_by}=='{_class}'\")", 
-            feat
+            feat,
+            fs=fs
         );
         display(HTML("<p/><br/><br/><br/>"))
 
@@ -1241,15 +1242,17 @@ def convert_col_type(df, feat, to_type):
     df_copy[feat] = df_copy[feat].astype(to_type)
     return df_copy
 
+# because a date can be represented in many different formats (as a string), there is a specialized function for conversion to datetime type (from stringß)
 def convert_col_to_date_type(df, feat, format="%Y-%m-%d"):
     df_copy = df.copy()
     df_copy[feat] = pd.to_datetime(df_copy[feat], format=format)
     return df_copy
 
 
-def scatter_plot_group_by(df, feat, groupby):
-    plt.figure()
-    plt.scatter(df[feat], df[groupby])
+def plot_group_by(df, feat, groupby):
+    plt.figure(figsize=(10,5))
+    # plt.scatter(df[feat], df[groupby])
+    sns.boxplot(df[groupby], df[feat])
     plt.show()
 
 def update_df_from_other(df_dest, df_src, feat):
@@ -1268,3 +1271,15 @@ def pipeline__transform(pipeline, X_to_transform):
 def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform=None):
     pipeline = pipeline__fit(pipeline_to_copy, X_to_fit, y_to_fit)
     return pipeline__transform(pipeline, X_to_transform if X_to_transform is not None else X_to_fit)
+
+
+def display_feature_grouping_header(group_id, feat_groupings, df, df_name):
+    display(HTML(f"<h3>Feature grouping: <i><a id='{group_id}'>{group_id}</a></i></h3>"))
+    display(HTML(f"<h4>Type: <font color='red'>{feat_groupings[group_id]['description']['type']}</font></h4>"))
+    display(HTML(f"<h4>Description:</h4>"))
+    desc = feat_groupings[group_id]['description']['description']
+    desc = desc if desc is not None and len(desc.strip())>0 else "<i>None provided.</i>"
+    display(HTML(desc))
+    display(HTML(f"<h4>Features in this group:</h4>"))
+    display(HTML(f"{feat_groupings[group_id]['features']}<p><br>"))
+    analyze_values(df[feat_groupings[group_id]['features']], df_name, standard_options_kargs={'sort_unique_vals':True})
