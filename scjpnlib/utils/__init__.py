@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools as it
-from .skl_transformers import SimpleValueTransformer
+from .skl_transformers import SimpleValueTransformer, LambdaTransformer
 import scipy.stats as st
 import math
 from itertools import combinations
@@ -15,7 +15,6 @@ import hashlib
 import re
 import inspect
 from copy import copy, deepcopy
-import importlib
 
 
 
@@ -439,6 +438,20 @@ def impute_TO_nan(df, feat, val_to_replace_with_nan):
     df_feat_val_as_nan = df.copy()
     df_feat_val_as_nan[feat] = df_feat_val_as_nan[feat].replace(val_to_replace_with_nan, np.NaN)
     return df_feat_val_as_nan
+
+def impute_TO_lcase(df, feat):
+    #exclude nulls since this may not have been done yet
+    df_nulls_excluded = df[df[feat].isnull()==False]
+
+    df_feat_with_ucase_vals = df_nulls_excluded.loc[df_nulls_excluded[feat].str.contains('[A-Z]+',regex=True)==True]
+    if len(df_feat_with_ucase_vals) > 0:
+        impute_lcase_rules = {}
+        impute_lcase_rules[feat] = lambda v: v.lower()
+        lt_lcase_cat_predictors = LambdaTransformer(impute_lcase_rules)
+        df_lcased = lt_lcase_cat_predictors.fit_transform(df_feat_with_ucase_vals)
+        return pd.concat([df_lcased, df[~df.index.isin(df_lcased.index)]], axis=0, ignore_index=False)
+    else:
+        return df
 
 def analyze_outliers_detailed(
     df, 
@@ -1255,12 +1268,3 @@ def pipeline__transform(pipeline, X_to_transform):
 def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform=None):
     pipeline = pipeline__fit(pipeline_to_copy, X_to_fit, y_to_fit)
     return pipeline__transform(pipeline, X_to_transform if X_to_transform is not None else X_to_fit)
-
-
-def instantiate_strategy_transfomer(strategy_class_name, feat, pipeline):
-    StratTransformerClass = getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_class_name)
-    return StratTransformerClass(feat, pipeline, verbose=True)
-
-def strategy_transform(strategy_class_name, feat, pipeline, X):
-    oStratTransformerClass = instantiate_strategy_transfomer(strategy_class_name, feat, pipeline)
-    return oStratTransformerClass.transform(X), oStratTransformerClass

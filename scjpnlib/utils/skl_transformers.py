@@ -408,6 +408,8 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
             
         # S.C.: add global mean
         self.target_global_mean = y.mean()
+
+        print(f"** TargetEncoderLOOTransformer FIT INFO **: transformer has been fit to X")
             
         # Return the fit object
         return self

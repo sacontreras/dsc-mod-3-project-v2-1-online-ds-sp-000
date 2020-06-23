@@ -65,7 +65,7 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,
@@ -115,7 +115,7 @@
     },
 
     "RandomForestClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,

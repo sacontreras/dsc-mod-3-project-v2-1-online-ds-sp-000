@@ -1,12 +1,23 @@
+import importlib
 from abc import ABC, abstractmethod
-from . import impute_TO_nan, analyze_outliers_detailed
+from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
+from IPython.core.display import HTML, Markdown
+import numpy as np
 
+
+
+
+# note that since these are instantiated through the instantiate_strategy_transfomer() method
+#   by specifying the descendant as a string (in the EDA config file), all descendant CBaseStrategyTransformer
+#   class constructors MUST have the signature (self, feat, pipeline_data_preprocessor, verbose)
 class CBaseStrategyTransformer():
     def __init__(self, feat, pipeline_data_preprocessor, description, verbose=False):
         self.feat = feat
+        self.transformer = None
         self.pipeline_data_preprocessor = pipeline_data_preprocessor
+        self.pipeline_step = None
         self.description = description
         self.verbose = verbose
 
@@ -21,14 +32,14 @@ class CBaseStrategyTransformer():
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
             self.pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
-                print(f"{self.pipeline_step} appended to pipeline")
+                print(f"strategy '{self.description}' appended step {self.pipeline_step} to pipeline")
 
         return self
 
     def transform(self, X):
         X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
         if self.verbose:
-                print(f"strategy transformation for feature {self.feat} COMPLETE")
+            print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
         return X_transformed
 
     def fit_transform(self, X, y=None):
@@ -67,6 +78,27 @@ class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
 
 
 
+class C__value_replacement__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, replacement_rules, pipeline_data_preprocessor, verbose=False):
+        super(C__value_replacement__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"replace values for feature: {feat}",
+            verbose=verbose
+        )
+        self.replacement_rules = {feat: replacement_rules}
+        
+    def get_transformer(self, X, y=None):
+        return SimpleValueTransformer(self.replacement_rules)
+
+
+
+
+# note that we would like to inherit from C__value_replacement__StrategyTransformer here
+#   but apparently there is a bug when using sklearn's SimpleImputer (wrapped by SimpleValueTransformer) 
+#   to impute nan - a weird rounding error occurs and the resulting replacement 
+#   turns out to be some weird floating point number and, in fact, NOT null
+#   therefore, we must use the impute_TO_nan function written to handle this special case
 class C__replace_0_with_nan__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
         super(C__replace_0_with_nan__StrategyTransformer, self).__init__(
@@ -78,6 +110,7 @@ class C__replace_0_with_nan__StrategyTransformer(CBaseStrategyTransformer):
 
     def get_transformer(self, X, y=None):
         return FunctionTransformer(lambda X: impute_TO_nan(X, self.feat, 0), validate=False)
+
 
 
 
@@ -120,6 +153,7 @@ class C__replace_outliers_with_median__StrategyTransformer(C__replace_outliers__
 
 
 
+
 class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, feat, leave_one_out, post_encode_null_to_global_mean, pipeline_data_preprocessor, verbose=False):
         super(C__target_encode__StrategyTransformer, self).__init__(
@@ -156,16 +190,17 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
 
         # now add the step to drop the original feature since we have the new target encoded feature (named f"{feat}_target_encoded"
         dct_after_target_encode = DropColumnsTransformer(self.feat)
+        pipeline_step = None
         if self.pipeline_data_preprocessor is not None:
             self.pipeline_data_preprocessor.steps.append([f"drop after target encoding: {self.feat}", dct_after_target_encode])
             pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
-                print(f"{pipeline_step} appended to pipeline")
+                print(f"strategy '{self.description}' appended step {pipeline_step} to pipeline")
 
         X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
         if self.verbose:
-                print(f"dropped feature {self.feat} after target encoding")
-                print(f"strategy transformation for feature {self.feat} COMPLETE")
+            print(f"strategy '{self.description}' dropped feature '{self.feat}' after target encoding")
+            print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
 
         return X_transformed
 
@@ -209,3 +244,122 @@ class C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransf
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+
+
+
+class C__impute_lcase__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__impute_lcase__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"impute lower-case transform: {feat}",
+            verbose=verbose
+        )
+        
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: impute_TO_lcase(X, self.feat), validate=False)
+    
+
+
+
+
+class CCompositeStrategyTransformer():
+    def __init__(self, description, feat_transformer_sequence, pipeline_data_preprocessor=None, verbose=False):
+        self.description = description
+        self.feat_transformer_sequence = []
+        for feat_transformer in feat_transformer_sequence:
+            feat = feat_transformer[0]
+            TransformerClass = feat_transformer[1]
+            transformerInstance = TransformerClass(feat, pipeline_data_preprocessor, verbose)
+            self.feat_transformer_sequence.append(transformerInstance)
+        self.pipeline_data_preprocessor = pipeline_data_preprocessor
+
+    # def fit(self, X, y=None):
+    #     fit_feat_transformer_sequence = []
+    #     for feat_transformer in self.feat_transformer_sequence:
+    #         fit_feat_transformer_sequence.append(feat_transformer.fit(X, y))
+    #     self.feat_transformer_sequence = fit_feat_transformer_sequence
+    #     return self
+
+    def transform(self, X):
+        X_transformed = X.copy()
+        for feat_transformer in self.feat_transformer_sequence:
+            X_transformed = feat_transformer.transform(X_transformed)
+        return X_transformed
+
+    def fit_transform(self, X, y=None):
+        X_transformed = X.copy()
+        for feat_transformer in self.feat_transformer_sequence:
+            X_transformed = feat_transformer.fit_transform(X_transformed, y)
+        return X_transformed
+
+
+
+
+# used for "reflection" instantation - i.e. instantiation via class name (string)
+#   this is integral to being able to dynamically switch to a different strategy via the config file
+def strategy_transformer_name_to_class(strategy_transformer_class_name):
+    return getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_transformer_class_name)
+
+def instantiate_strategy_transformer(strategy_composition, description, pipeline):
+    feat_transformer_sequence = []
+    for strategy_component in strategy_composition:
+        feat_transformer_sequence.append((strategy_component[0], strategy_transformer_name_to_class(strategy_component[1])))
+    return CCompositeStrategyTransformer(description, feat_transformer_sequence, pipeline, verbose=True)
+
+def _html_prettify_strategy_transformer_description(strategy_transformer):
+    if isinstance(strategy_transformer, CCompositeStrategyTransformer):
+        s_html = f"<b>(composite) strategy name/description: <i><font color='red'>{strategy_transformer.description}</font></i></b>"
+        s_html += "<ol>"
+        for feat_transformer in strategy_transformer.feat_transformer_sequence:
+            s_html += f"<li>{_html_prettify_strategy_transformer_description(feat_transformer)}</li>"
+        s_html += "</ol>"
+        return s_html
+    else:
+        return f"<b>strategy description</b>: <i><font color='blue'>{strategy_transformer.description}</font></i>"
+
+def html_prettify_strategy_transformer_description(strategy_transformer):
+    display(HTML(_html_prettify_strategy_transformer_description(strategy_transformer)))
+
+
+
+
+
+
+
+
+
+
+# Below are strategy transformers that are specific to features
+
+# ************* StrategyTransformers specific to funder: BEGIN *************
+class C__impute_lcase__funder__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__missing_value_imputer__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
+        super(C__missing_value_imputer__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__funder__StrategyTransformer, self).__init__(
+            description="required preprocessing for funder", 
+            feat_transformer_sequence=[
+                ['funder', C__impute_lcase__funder__StrategyTransformer],
+                ['funder', C__missing_value_imputer__funder__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to funder: END *************

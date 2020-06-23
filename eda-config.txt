@@ -31,97 +31,202 @@
 
 
     "variable_transformation_strategies": {
-        // amount_tsh is continuous/categorical-ordinal, so options are as follows
-        //"amount_tsh": "C__leave_it_as_is__StrategyTransformer"
-        "amount_tsh": "C__drop_it__StrategyTransformer" /*** BEST ACCURACY ***/
-        //"amount_tsh": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //"amount_tsh": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //"amount_tsh": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //"amount_tsh": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //"amount_tsh": "C__replace_0_with_nan__StrategyTransformer"
-        //"amount_tsh": "C__replace_outliers_with_mean__StrategyTransformer"
-        //"amount_tsh": "C__replace_outliers_with_median__StrategyTransformer"
+        // amount_tsh is continuous/categorical-ordinal, so options are as follows:
+        //      C__leave_it_as_is__StrategyTransformer
+        //      C__drop_it__StrategyTransformer  (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__replace_0_with_nan__StrategyTransformer
+        //      C__replace_outliers_with_mean__StrategyTransformer
+        //      C__replace_outliers_with_median__StrategyTransformer
+        //
+        "amount_tsh": [
+            ["amount_tsh", "C__drop_it__StrategyTransformer"]
+        ]
 
-        // funder is categorical/string, so leaving it as is is not an option; options are as follows
-        , "funder": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "funder": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "funder": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "funder": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "installer": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "installer": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "installer": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "installer": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // funder is categorical-string, so leaving it as is is not an option
+        //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
+        //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
+        //      options are as follows:
+        //      C__drop_it__StrategyTransformer     (*** BEST ACCURACY ***)
+        //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer]
+        //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer]
+        //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer]
+        //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer]
+        //
+        , "funder": [
+            ["funder", "C__drop_it__StrategyTransformer"]
+        ]
 
-        , "basin": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "basin": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "basin": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "basin": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // installer is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "installer": [
+            ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
 
-        , "region_code": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "region_code": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "region_code": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "region_code": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "district_code": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "district_code": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "district_code": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "district_code": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // basin is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "basin": [
+            ["basin", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
 
-        //, "population": "C__leave_it_as_is__StrategyTransformer"
-        //, "population": "C__drop_it__StrategyTransformer"
-        //, "population": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "population": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "population": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "population": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "population": "C__replace_0_with_nan__StrategyTransformer"
-        , "population": "C__replace_outliers_with_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "population": "C__replace_outliers_with_median__StrategyTransformer"
 
-        , "scheme_management": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "scheme_management": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "scheme_management": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "scheme_management": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // region_code is categorical-numeric (not ordinal), so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "region_code": [
+            ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
 
-        , "scheme_name": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "scheme_name": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "scheme_name": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "scheme_name": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "extraction_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "extraction_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "extraction_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "extraction_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // district_code is categorical-numeric (not ordinal), so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "district_code": [
+            ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
 
-        , "management": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "management": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "management": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "management": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "payment_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "payment_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "payment_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "payment_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // population is continuous/categorical-ordinal, so options are as follows:
+        //      C__leave_it_as_is__StrategyTransformer
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__replace_0_with_nan__StrategyTransformer
+        //      C__replace_outliers_with_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__replace_outliers_with_median__StrategyTransformer
+        //
+        , "population": [
+            ["population", "C__replace_outliers_with_mean__StrategyTransformer"]
+        ]
 
-        , "water_quality": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "water_quality": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "water_quality": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "water_quality": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "quantity": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "quantity": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "quantity": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "quantity": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // scheme_management is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "scheme_management": [
+            ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
 
-        , "source": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "source": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "source": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "source": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
 
-        , "waterpoint_type": "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer" /*** BEST ACCURACY ***/
-        //, "waterpoint_type": "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
-        //, "waterpoint_type": "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"
-        //, "waterpoint_type": "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"
+        // scheme_name is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "scheme_name": [
+            ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+
+        // extraction_type is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "extraction_type": [
+            ["extraction_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+
+        // management is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "management": [
+            ["management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+
+        // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "payment_type": [
+            ["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+        // water_quality is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "water_quality": [
+            ["water_quality", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+        // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "quantity": [
+            ["quantity", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+        // source is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "source": [
+            ["source", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
+
+        // waterpoint_type is categorical-string, so leaving it as is is not an option; options are as follows:
+        //      C__drop_it__StrategyTransformer
+        //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer (*** BEST ACCURACY ***)
+        //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
+        //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
+        //
+        , "waterpoint_type": [
+            ["waterpoint_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+        ]
     },
 
 
