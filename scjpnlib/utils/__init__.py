@@ -15,6 +15,7 @@ import hashlib
 import re
 import inspect
 from copy import copy, deepcopy
+import pprint
 
 
 
@@ -1273,7 +1274,7 @@ def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform
     return pipeline__transform(pipeline, X_to_transform if X_to_transform is not None else X_to_fit)
 
 
-def display_feature_grouping_header(group_id, feat_groupings, df, df_name):
+def display_feature_grouping_header(feat_groupings, group_id, df, df_name):
     display(HTML(f"<h3>Feature grouping: <i><a id='{group_id}'>{group_id}</a></i></h3>"))
     display(HTML(f"<h4>Type: <font color='red'>{feat_groupings[group_id]['description']['type']}</font></h4>"))
     display(HTML(f"<h4>Description:</h4>"))
@@ -1283,3 +1284,11 @@ def display_feature_grouping_header(group_id, feat_groupings, df, df_name):
     display(HTML(f"<h4>Features in this group:</h4>"))
     display(HTML(f"{feat_groupings[group_id]['features']}<p><br>"))
     analyze_values(df[feat_groupings[group_id]['features']], df_name, standard_options_kargs={'sort_unique_vals':True})
+
+def display_pretty_feature_groupings(feat_groupings):
+    feat_groupings_copy = feat_groupings.copy()
+    for group_id, feat_group in feat_groupings_copy.items():
+        if 'preprocessing_strategy' in feat_group:
+            del feat_group['preprocessing_strategy']
+    # print(json.dumps(feat_groupings_copy, indent=4))
+    display(HTML(f"<pre>{json.dumps(feat_groupings_copy, indent=4)}</pre>"))
