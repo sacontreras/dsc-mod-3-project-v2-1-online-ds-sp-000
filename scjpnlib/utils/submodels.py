@@ -117,7 +117,7 @@ def _kmeans_from_tfidf(tfidf, idx_term_map, n_clusters):
 
 def _tfidf_kmeans_classify_feature(df, feat, kmeans, tfidf_vectorizer, idx_term_map):
     # add new "class" feature
-    feat_name_class = f"{feat}_class"
+    feat_name_class = f"{feat}_tfidf_kmeans_class"
     display(HTML(f"<p><br>mapping DIRTY {feat}s to corresponding {feat_name_class}es..."))
     df[feat_name_class] = df[feat].map(
         lambda feat_val: predict_kmeans_cluster_membership(
@@ -132,7 +132,7 @@ def _tfidf_kmeans_classify_feature(df, feat, kmeans, tfidf_vectorizer, idx_term_
     return df, feat_name_class
 
 
-def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, verbose=1, display_max_rows=25):
+def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, verbosity=1, display_max_rows=25):
     """
     IMPORTANT!  Set mean_cluster_size only if you want to OVERRIDE the default beahvior to base KMeans n_clusters on entropy of TF-IDF doc distribution.
         
@@ -176,9 +176,9 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
         lambda _feat: doc_to_tfidf_fit(_feat, tfidf_vectorizer, idx_term_map)[0][0]
     )
     display(HTML(f"<pre>{s_all_done}</pre>"))
-    if verbose > 0:
+    if verbosity > 1:
         cols_for_this_feat = [feat, feat_name_stripped_lcase, feat_name_word_tokenized, feat_name_word_tokenized_no_stopwords, feat_name_after_tfidf]
-        display(HTML(f"<h3>First few rows of {df_name} TF-IDF DataFrame (verbose)</h3>"))
+        display(HTML(f"<h3>First few rows of {df_name} TF-IDF DataFrame (verbosity>1)</h3>"))
         display(HTML(df_copy[cols_for_this_feat].head(10).to_html()))
 
     # THIS PART IS KEY!  Entropy is the basis for setting the proper cluster size and hence the proper n_clusters parameter to build the KMeans model!
@@ -211,14 +211,16 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
         ], 
         axis=1
     )
-    display(HTML(f"<h3><i>{feat}</i> to <i>{feat_name_class}</i> Mapping:</h3>"))
-    display(HTML(df_copy[[feat, feat_name_class]].to_html(notebook=True, justify='left', max_rows=display_max_rows)))
 
-    display(HTML(f"<p><br>building distribution plot of {feat_name_class}..."))
-    display(HTML(f"<h3><i>{feat_name_class}</i> Distribution:</h3>"))
-    plt.figure(figsize=(15,6))
-    df_copy[feat_name_class].hist(bins=len(df_kmeans_clusters))
-    plt.show()
+    if verbosity > 0:
+        display(HTML(f"<h3><i>{feat}</i> to <i>{feat_name_class}</i> Mapping:</h3>"))
+        display(HTML(df_copy[[feat, feat_name_class]].to_html(notebook=True, justify='left', max_rows=display_max_rows)))
+
+        display(HTML(f"<p><br>building distribution plot of {feat_name_class}..."))
+        display(HTML(f"<h3><i>{feat_name_class}</i> Distribution:</h3>"))
+        plt.figure(figsize=(15,6))
+        df_copy[feat_name_class].hist(bins=len(df_kmeans_clusters))
+        plt.show()
 
 
     display(HTML(f"<p><br>computing <i>frequency</i> of {feat_name_class}..."))
@@ -226,7 +228,9 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
         lambda centroid_idx: df_copy[feat_name_class].value_counts()[centroid_idx]
     )
     display(HTML(f"<pre>{s_all_done}</pre>"))
-    display(HTML(f"<h3><code>KMeans</code> Cluster Centroids (<i>{feat_name_class}</i>), ordered by <i>frequency</i>:</h3>"))
-    display(HTML(df_kmeans_clusters.sort_values(by='frequency', ascending=False).to_html(notebook=True, justify='left', max_rows=display_max_rows)))    
+
+    if verbosity > 0:
+        display(HTML(f"<h3><code>KMeans</code> Cluster Centroids (<i>{feat_name_class}</i>), ordered by <i>frequency</i>:</h3>"))
+        display(HTML(df_kmeans_clusters.sort_values(by='frequency', ascending=False).to_html(notebook=True, justify='left', max_rows=display_max_rows)))    
 
     return df_copy, corpus, tfidf, tfidf_vectorizer, kmeans, df_kmeans_clusters

@@ -43,16 +43,15 @@
 
             "preprocessing_strategy": [
                 // amount_tsh is numeric, so options are as follows:
-                //      C__leave_it_as_is__StrategyTransformer
-                //      C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer
-                //      C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer
-                //      C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer
-                //      C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer
-                //      C__replace_0_with_nan__StrategyTransformer
-                //      C__replace_outliers_with_mean__StrategyTransformer
-                //      C__replace_outliers_with_median__StrategyTransformer
-                //      C__drop_it__StrategyTransformer  (*** BEST ACCURACY ***)
-                ["amount_tsh", "C__drop_it__StrategyTransformer"]
+                //["amount_tsh", "C__leave_it_as_is__StrategyTransformer"]
+                //["amount_tsh", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                //["amount_tsh", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                //["amount_tsh", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                //["amount_tsh", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                //["amount_tsh", "C__replace_0_with_nan__StrategyTransformer"]
+                //["amount_tsh", "C__replace_outliers_with_mean__StrategyTransformer"]
+                //["amount_tsh", "C__replace_outliers_with_median__StrategyTransformer"]
+                ["amount_tsh", "C__drop_it__StrategyTransformer"]   // *** CONFIRMED BEST ACCURACY ***
             ]
         },
 
@@ -65,7 +64,13 @@
             "features": ["date_recorded", "construction_year"],
 
             "preprocessing_strategy": [
+                // pump_age is a NEW/engineered feature, so there is only one option:
                 ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"]
+
+                // if the desire is to NOT create this new engineered feature, then this entire node (rooted at "pump_age_at_observation_date) should be removed
+                //      as a result, then date_recorded and construction_year features MUST be handled - dropping them is a viable option, or keeping them
+                //      individually and doing some of the transformations on them that were explored in the EDA notebook
+                //          e.g. lcasing, replacing nulls and 0-values, etc.
             ]
         },
 
@@ -82,12 +87,35 @@
                 //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
                 //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
                 //      options are as follows:
-                //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer]
-                //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer]
-                //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer]
-                //      [C__required_proprocessing__funder__StrategyTransformer, C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer]
-                //      C__drop_it__StrategyTransformer     (*** BEST ACCURACY ***)
-                ["funder", "C__drop_it__StrategyTransformer"]
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["funder_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["funder_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                ["funder", "C__drop_it__StrategyTransformer"]   // *** CONFIRMED BEST ACCURACY ***
             ]
         },
 

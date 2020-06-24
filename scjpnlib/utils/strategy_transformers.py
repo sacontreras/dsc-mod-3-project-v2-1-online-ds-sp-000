@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
+from .submodels import tfidf_kmeans_classify_feature
 from IPython.core.display import HTML, Markdown
 import numpy as np
 
@@ -288,7 +289,29 @@ class C__convert_string_date_to_datetime__StrategyTransformer(CBaseStrategyTrans
         
     def get_transformer(self, X, y=None):
         return FunctionTransformer(lambda X: convert_col_to_date_type(X, self.feat, self.from_format), validate=False)
-    
+
+
+
+
+class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__tfidf_kmeans_classify__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"tfidf kmeans classify high-cardinality string-categorical: {feat}",
+            verbose=verbose
+        )
+        
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: tfidf_kmeans_classify_feature(
+                X, 
+                '', 
+                'funder', 
+                verbosity=0
+            )[0], 
+            validate=False
+        )
+
 
 
 
@@ -474,7 +497,6 @@ class C__not_known_literal_value_replacement__funder__StrategyTransformer(C__val
             verbose=verbose
         )
 
-
 class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__required_proprocessing__funder__StrategyTransformer, self).__init__(
@@ -485,6 +507,14 @@ class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyT
                 ['funder', C__not_known_literal_value_replacement__funder__StrategyTransformer]
             ],
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__tfidf_kmeans_classify__funder__StrategyTransformer(C__tfidf_kmeans_classify__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_kmeans_classify__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            pipeline_data_preprocessor, 
             verbose=verbose
         )
 # ************* StrategyTransformers specific to funder: END *************

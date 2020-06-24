@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools as it
@@ -16,6 +17,8 @@ import re
 import inspect
 from copy import copy, deepcopy
 import pprint
+
+sns.set_style('whitegrid')
 
 
 
@@ -849,6 +852,7 @@ def analyze_distributions(
             plt.figure(figsize=fs)
             # plt.hist(df[feat], bins=n_all_unique)
             if df[feat].dtype==object:
+                matplotlib.rcParams.update(matplotlib.rcParamsDefault)
                 sns.countplot(df[feat])
             else:
                 sns.distplot(df[feat], bins=n_all_unique)
@@ -857,6 +861,7 @@ def analyze_distributions(
             if n_all_unique > 100:
                 plt.gca().get_xaxis().set_visible(False)
             plt.show()
+            sns.set_style('whitegrid')
 
         percentile_entry = {}
 
