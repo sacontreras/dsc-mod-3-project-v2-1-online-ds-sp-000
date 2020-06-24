@@ -264,16 +264,17 @@ class C__impute_lcase__StrategyTransformer(CBaseStrategyTransformer):
 
 
 class C__convert_string_date_to_datetime__StrategyTransformer(CBaseStrategyTransformer):
-    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+    def __init__(self, feat, from_format, pipeline_data_preprocessor, verbose=False):
         super(C__convert_string_date_to_datetime__StrategyTransformer, self).__init__(
             feat, 
             pipeline_data_preprocessor, 
-            description=f"convert (from string) to datetime type: {feat}",
+            description=f"convert (from string date format '{from_format}') to datetime type: {feat}",
             verbose=verbose
         )
+        self.from_format = from_format
         
     def get_transformer(self, X, y=None):
-        return FunctionTransformer(lambda X: convert_col_to_date_type(X, self.feat), validate=False)
+        return FunctionTransformer(lambda X: convert_col_to_date_type(X, self.feat, self.from_format), validate=False)
     
 
 
@@ -380,3 +381,83 @@ class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyT
             verbose=verbose
         )
 # ************* StrategyTransformers specific to funder: END *************
+
+
+# ************* StrategyTransformers specific to pump_age: BEGIN *************
+class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__convert_string_date_to_datetime__date_recorded__StrategyTransformer, self).__init__(
+            'date_recorded',
+            from_format="%Y-%m-%d",
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__replace_0_construction_year_with_date_recorded__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__replace_0_construction_year_with_date_recorded__StrategyTransformer, self).__init__(
+            'construction_year', 
+            pipeline_data_preprocessor, 
+            description=f"replace 0 with date_recorded value: construction_year",
+            verbose=verbose
+        )
+
+    def replace_0_construction_year_with_date_recorded(self, X):
+        X_copy = X.copy()
+        X_copy_0_construction_year = X_copy[X_copy.construction_year==0]
+        X_copy['dt_recorded_yr'] = X_copy.date_recorded.dt.year
+        X_copy['construction_year'] = np.where(X_copy['construction_year']==0, X_copy['dt_recorded_yr'], X_copy['construction_year'])
+        X_copy = X_copy.drop('dt_recorded_yr', axis=1)
+        return X_copy
+
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: self.replace_0_construction_year_with_date_recorded(X), validate=False)
+
+class C__convert_string_date_to_datetime__construction_year__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__convert_string_date_to_datetime__construction_year__StrategyTransformer, self).__init__(
+            'construction_year',
+            from_format="%Y",
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__create_pump_age_feature_from_date_recorded_and_construction_year__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__create_pump_age_feature_from_date_recorded_and_construction_year__StrategyTransformer, self).__init__(
+            'pump_age', 
+            pipeline_data_preprocessor, 
+            description=f"create feature from date_recorded and construction_year: pump_age",
+            verbose=verbose
+        )
+
+    def add_pump_age_feature(self, X):
+        X_copy = X.copy()
+
+        X__pump_age__debug = X_copy[['date_recorded', 'construction_year']].copy()
+
+        # now simply compute date diff (in years)
+        X__pump_age__debug['pump_age'] = X__pump_age__debug['date_recorded'].dt.year - X__pump_age__debug['construction_year'].dt.year
+        X_copy['pump_age'] = X__pump_age__debug['pump_age']
+
+        return X_copy
+
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: self.add_pump_age_feature(X), validate=False)
+
+class C__required_proprocessing__pump_age__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__pump_age__StrategyTransformer, self).__init__(
+            description="required preprocessing for pump_age", 
+            feat_transformer_sequence=[
+                ['date_recorded', C__convert_string_date_to_datetime__date_recorded__StrategyTransformer],
+                ['construction_year', C__replace_0_construction_year_with_date_recorded__StrategyTransformer],
+                ['construction_year', C__convert_string_date_to_datetime__construction_year__StrategyTransformer],
+                ['pump_age', C__create_pump_age_feature_from_date_recorded_and_construction_year__StrategyTransformer],
+                ['date_recorded', C__drop_it__StrategyTransformer],
+                ['construction_year', C__drop_it__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to pump_age: END *************

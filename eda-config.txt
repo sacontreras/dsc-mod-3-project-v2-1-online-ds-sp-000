@@ -63,7 +63,7 @@
             "features": ["date_recorded", "construction_year"],
 
             "preprocessing_strategy": [
-                ["amount_tsh", "C__drop_it__StrategyTransformer"]
+                ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"]
             ]
         },
 
