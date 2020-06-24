@@ -99,12 +99,25 @@ class C__value_replacement__StrategyTransformer(CBaseStrategyTransformer):
 #   to impute nan - a weird rounding error occurs and the resulting replacement 
 #   turns out to be some weird floating point number and, in fact, NOT null
 #   therefore, we must use the impute_TO_nan function written to handle this special case
-class C__replace_0_with_nan__StrategyTransformer(CBaseStrategyTransformer):
+class C__replace_value_with_nan__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, value_to_replace_with_nan, pipeline_data_preprocessor, verbose=False):
+        super(C__replace_value_with_nan__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"replace {feat} {value_to_replace_with_nan}-values with nan",
+            verbose=verbose
+        )
+        self.value_to_replace_with_nan = value_to_replace_with_nan
+
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: impute_TO_nan(X, self.feat, self.value_to_replace_with_nan), validate=False)
+
+class C__replace_0_with_nan__StrategyTransformer(C__replace_value_with_nan__StrategyTransformer):
     def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
         super(C__replace_0_with_nan__StrategyTransformer, self).__init__(
             feat, 
+            0,
             pipeline_data_preprocessor, 
-            description=f"replace {feat} 0-values with nan",
             verbose=verbose
         )
 
@@ -351,38 +364,6 @@ def html_prettify_strategy_transformer_description(strategy_transformer):
 
 # Below are strategy transformers that are specific to features
 
-# ************* StrategyTransformers specific to funder: BEGIN *************
-class C__impute_lcase__funder__StrategyTransformer(C__impute_lcase__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__impute_lcase__funder__StrategyTransformer, self).__init__(
-            'funder', 
-            pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-
-class C__missing_value_imputer__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
-        super(C__missing_value_imputer__funder__StrategyTransformer, self).__init__(
-            'funder', 
-            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement}],
-            pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-
-class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__required_proprocessing__funder__StrategyTransformer, self).__init__(
-            description="required preprocessing for funder", 
-            feat_transformer_sequence=[
-                ['funder', C__impute_lcase__funder__StrategyTransformer],
-                ['funder', C__missing_value_imputer__funder__StrategyTransformer]
-            ],
-            pipeline_data_preprocessor=pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-# ************* StrategyTransformers specific to funder: END *************
-
-
 # ************* StrategyTransformers specific to pump_age: BEGIN *************
 class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -461,3 +442,49 @@ class C__required_proprocessing__pump_age__StrategyTransformer(CCompositeStrateg
             verbose=verbose
         )
 # ************* StrategyTransformers specific to pump_age: END *************
+
+
+# ************* StrategyTransformers specific to funder: BEGIN *************
+class C__impute_lcase__funder__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__missing_value_imputer__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
+        super(C__missing_value_imputer__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            [
+                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
+                {'missing_values': '0', 'strategy': 'constant', 'fill_value': missing_string_value_replacement}
+            ],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__not_known_literal_value_replacement__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, not_known_literal_value_replacement="unknown"):
+        super(C__not_known_literal_value_replacement__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': not_known_literal_value_replacement}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+
+class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__funder__StrategyTransformer, self).__init__(
+            description="required preprocessing for funder", 
+            feat_transformer_sequence=[
+                ['funder', C__impute_lcase__funder__StrategyTransformer],
+                ['funder', C__missing_value_imputer__funder__StrategyTransformer],
+                ['funder', C__not_known_literal_value_replacement__funder__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to funder: END *************
