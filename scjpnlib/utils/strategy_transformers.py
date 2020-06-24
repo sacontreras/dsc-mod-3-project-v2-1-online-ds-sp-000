@@ -518,3 +518,57 @@ class C__tfidf_kmeans_classify__funder__StrategyTransformer(C__tfidf_kmeans_clas
             verbose=verbose
         )
 # ************* StrategyTransformers specific to funder: END *************
+
+
+# ************* StrategyTransformers specific to installer: BEGIN *************
+class C__impute_lcase__installer__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__missing_value_imputer__installer__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
+        super(C__missing_value_imputer__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            [
+                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
+                {'missing_values': '0', 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
+                {'missing_values': '-', 'strategy': 'constant', 'fill_value': missing_string_value_replacement}
+            ],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__not_known_literal_value_replacement__installer__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, not_known_literal_value_replacement="unknown"):
+        super(C__not_known_literal_value_replacement__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': not_known_literal_value_replacement}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__installer__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__installer__StrategyTransformer, self).__init__(
+            description="required preprocessing for funder", 
+            feat_transformer_sequence=[
+                ['installer', C__impute_lcase__installer__StrategyTransformer],
+                ['installer', C__missing_value_imputer__installer__StrategyTransformer],
+                ['installer', C__not_known_literal_value_replacement__installer__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__tfidf_kmeans_classify__installer__StrategyTransformer(C__tfidf_kmeans_classify__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_kmeans_classify__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to installer: END *************
