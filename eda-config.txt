@@ -163,19 +163,19 @@
                 //["installer", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
 
                 //["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                //["installer", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                //["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                //["installer", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                //["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
 
                 //["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                //["installer", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["installer", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
                 //["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
 
-                //["funder", "C__required_proprocessing__installer__StrategyTransformer"],
-                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                //["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
                 //["installer_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
 
                 //["funder", "C__required_proprocessing__installer__StrategyTransformer"],
-                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                //["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
                 //["installer_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
 
                 //["installer", "C__drop_it__StrategyTransformer"]

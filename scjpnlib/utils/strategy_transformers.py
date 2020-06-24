@@ -6,6 +6,8 @@ from .skl_transformers import fit_target_encoder, target_encoder_transform, Drop
 from .submodels import tfidf_kmeans_classify_feature
 from IPython.core.display import HTML, Markdown
 import numpy as np
+import inspect
+import json
 
 
 
@@ -33,14 +35,14 @@ class CBaseStrategyTransformer():
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
             self.pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
-                print(f"strategy '{self.description}' appended step {self.pipeline_step} to pipeline")
+                print(f"strategy \"{self.description}\" appended step {self.pipeline_step} to pipeline")
 
         return self
 
     def transform(self, X):
         X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
         if self.verbose:
-            print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
+            print(f"strategy \"{self.description}\" transformation for feature \"{self.feat}\" is COMPLETE!")
         return X_transformed
 
     def fit_transform(self, X, y=None):
@@ -54,7 +56,7 @@ class C__leave_it_as_is__StrategyTransformer(CBaseStrategyTransformer):
         super(C__leave_it_as_is__StrategyTransformer, self).__init__(
             feat, 
             pipeline_data_preprocessor, 
-            description=f"leave feature {feat} as is (do nothing)",
+            description=f"leave feature as is (do nothing): {feat}",
             verbose=verbose
         )
 
@@ -69,7 +71,7 @@ class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
         super(C__drop_it__StrategyTransformer, self).__init__(
             feat, 
             pipeline_data_preprocessor, 
-            description=f"drop feature {feat}",
+            description=f"drop feature: {feat}",
             verbose=verbose
         )
 
@@ -90,6 +92,8 @@ class C__value_replacement__StrategyTransformer(CBaseStrategyTransformer):
         self.replacement_rules = {feat: replacement_rules}
         
     def get_transformer(self, X, y=None):
+        if self.verbose:
+            print(f"strategy \"{self.description}\" replacement_rules:\n{json.dumps(self.replacement_rules, indent=4)}")
         return SimpleValueTransformer(self.replacement_rules)
 
 
@@ -105,7 +109,7 @@ class C__replace_value_with_nan__StrategyTransformer(CBaseStrategyTransformer):
         super(C__replace_value_with_nan__StrategyTransformer, self).__init__(
             feat, 
             pipeline_data_preprocessor, 
-            description=f"replace {feat} {value_to_replace_with_nan}-values with nan",
+            description=f"replace \"{feat}\" values ({value_to_replace_with_nan}) with nan",
             verbose=verbose
         )
         self.value_to_replace_with_nan = value_to_replace_with_nan
@@ -133,7 +137,7 @@ class C__replace_outliers__StrategyTransformer(CBaseStrategyTransformer):
         super(C__replace_outliers__StrategyTransformer, self).__init__(
             feat, 
             pipeline_data_preprocessor, 
-            description=f"replace {feat} outliers with {replacement_strategy}",
+            description=f"replace \"{feat}\" outliers with {replacement_strategy}",
             verbose=verbose
         )
         self.replacement_strategy = replacement_strategy
@@ -142,6 +146,11 @@ class C__replace_outliers__StrategyTransformer(CBaseStrategyTransformer):
         _, _, all_replace_outliers_rules = analyze_outliers_detailed(X, '', self.feat, suppress_output=True)
         if self.replacement_strategy in all_replace_outliers_rules:
             replacement_rules = all_replace_outliers_rules[self.replacement_strategy]
+
+            # these can be quite long so it's been explicitly suppressed
+            # if self.verbose:
+            #     print(f"strategy \"{self.description}\" replacement_rules:\n{json.dumps(replacement_rules, indent=4)}")
+
             return SimpleValueTransformer(replacement_rules)
         else:
             return FunctionTransformer(lambda X: X, validate=False) # leave it as is
@@ -349,17 +358,31 @@ class CCompositeStrategyTransformer():
 
 
 
+# ******************* API for string (reflection) based instantiation - used in conjunction with invokinng strategies specified in config file: BEGIN *******************
+
 # used for "reflection" instantation - i.e. instantiation via class name (string)
 #   this is integral to being able to dynamically switch to a different strategy via the config file
 def strategy_transformer_name_to_class(strategy_transformer_class_name):
     return getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_transformer_class_name)
+
+class BadCtorSignature(Exception):
+    def __init__(self, class_name):
+        self.message = f"class {class_name} ctor does not match required signature: self, feat, pipeline_data_preprocessor, verbose"
 
 def instantiate_strategy_transformer(strategy_composition, description, pipeline):
     feat_transformer_sequence = []
     for strategy_component in strategy_composition:
         # print(f"strategy component feat: {strategy_component[0]}")
         # print(f"strategy component class-name: {strategy_component[1]}")
-        feat_transformer_sequence.append((strategy_component[0], strategy_transformer_name_to_class(strategy_component[1])))
+        StratTransformerClass = strategy_transformer_name_to_class(strategy_component[1])
+
+        # check ctor signature - it must match required sig which is 4 args: self, feat, pipeline_data_preprocessor, verbose
+        ctor_argspec = inspect.getargspec(StratTransformerClass.__init__)
+        if len(ctor_argspec.args) != 4:
+            raise(BadCtorSignature(strategy_component[1]))
+
+        feat_transformer_sequence.append((strategy_component[0], StratTransformerClass))
+
     return CCompositeStrategyTransformer(description, feat_transformer_sequence, pipeline, verbose=True)
 
 def _html_prettify_strategy_transformer_description(strategy_transformer):
@@ -376,6 +399,7 @@ def _html_prettify_strategy_transformer_description(strategy_transformer):
 def html_prettify_strategy_transformer_description(strategy_transformer):
     display(HTML(_html_prettify_strategy_transformer_description(strategy_transformer)))
 
+# ******************* API for string (reflection) based instantiation - used in conjunction with invokinng strategies specified in config file: END *******************
 
 
 
