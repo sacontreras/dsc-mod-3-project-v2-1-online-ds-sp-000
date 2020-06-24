@@ -379,7 +379,7 @@ def instantiate_strategy_transformer(strategy_composition, description, pipeline
         # check ctor signature - it must match required sig which is 4 args: self, feat, pipeline_data_preprocessor, verbose
         ctor_argspec = inspect.getargspec(StratTransformerClass.__init__)
         if len(ctor_argspec.args) != 4:
-            raise(BadCtorSignature(strategy_component[1]))
+            raise(BadCtorSignature(f"{strategy_component[1]}: {ctor_argspec} does not match required arg spec: (self, feat, pipeline_data_preprocessor, verbose)"))
 
         feat_transformer_sequence.append((strategy_component[0], StratTransformerClass))
 
@@ -501,22 +501,22 @@ class C__impute_lcase__funder__StrategyTransformer(C__impute_lcase__StrategyTran
         )
 
 class C__missing_value_imputer__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__missing_value_imputer__funder__StrategyTransformer, self).__init__(
             'funder', 
             [
-                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
-                {'missing_values': '0', 'strategy': 'constant', 'fill_value': missing_string_value_replacement}
+                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': "none"},
+                {'missing_values': '0', 'strategy': 'constant', 'fill_value': "none"}
             ],
             pipeline_data_preprocessor, 
             verbose=verbose
         )
 
 class C__not_known_literal_value_replacement__funder__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, not_known_literal_value_replacement="unknown"):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__not_known_literal_value_replacement__funder__StrategyTransformer, self).__init__(
             'funder', 
-            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': not_known_literal_value_replacement}],
+            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': "unknown"}],
             pipeline_data_preprocessor, 
             verbose=verbose
         )
@@ -554,23 +554,23 @@ class C__impute_lcase__installer__StrategyTransformer(C__impute_lcase__StrategyT
         )
 
 class C__missing_value_imputer__installer__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, missing_string_value_replacement="none"):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__missing_value_imputer__installer__StrategyTransformer, self).__init__(
             'installer', 
             [
-                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
-                {'missing_values': '0', 'strategy': 'constant', 'fill_value': missing_string_value_replacement},
-                {'missing_values': '-', 'strategy': 'constant', 'fill_value': missing_string_value_replacement}
+                {'missing_values': np.nan, 'strategy': 'constant', 'fill_value': "none"},
+                {'missing_values': '0', 'strategy': 'constant', 'fill_value': "none"},
+                {'missing_values': '-', 'strategy': 'constant', 'fill_value': "none"}
             ],
             pipeline_data_preprocessor, 
             verbose=verbose
         )
 
 class C__not_known_literal_value_replacement__installer__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False, not_known_literal_value_replacement="unknown"):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__not_known_literal_value_replacement__installer__StrategyTransformer, self).__init__(
             'installer', 
-            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': not_known_literal_value_replacement}],
+            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': "unknown"}],
             pipeline_data_preprocessor, 
             verbose=verbose
         )
@@ -596,3 +596,26 @@ class C__tfidf_kmeans_classify__installer__StrategyTransformer(C__tfidf_kmeans_c
             verbose=verbose
         )
 # ************* StrategyTransformers specific to installer: END *************
+
+
+# ************* StrategyTransformers specific to gps_coordinates: BEGIN *************
+class C__weird_literal_value_replacement__latitude__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__weird_literal_value_replacement__latitude__StrategyTransformer, self).__init__(
+            'latitude', 
+            [{'missing_values': -2.e-08, 'strategy': 'constant', 'fill_value': 0.0}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__gps_coordinates__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__installer__StrategyTransformer, self).__init__(
+            description="required preprocessing for gps_coordinates", 
+            feat_transformer_sequence=[
+                ['latitude', C__weird_literal_value_replacement__latitude__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to gps_coordinates: END *************

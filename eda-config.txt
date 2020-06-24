@@ -195,8 +195,12 @@
                 //  the same holds for scaling if we do it
                 //"weird" values (but not outliers) can be handled individually in each
                 //NO outlier processing!
-                ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                ["longitude", "C__leave_it_as_is__StrategyTransformer"]
+
+                ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"]  // *** CONFIRMED BEST ACCURACY ***
+
+                //OR
+                //["latitude", "C__drop_it__StrategyTransformer"],
+                //["longitude", "C__drop_it__StrategyTransformer"]
             ]
         },
 
