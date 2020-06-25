@@ -299,6 +299,29 @@
                 ["lga", "C__drop_it__StrategyTransformer"],
                 ["ward", "C__drop_it__StrategyTransformer"]
             ]
+        },
+
+        "population": {
+            "description": {
+                "type": "provided",
+                "description": "'Population around the well'"
+            },
+
+            "features": ["population"],
+
+            "preprocessing_strategy": [
+                // population is numeric, so options are as follows 
+                //["population", "C__leave_it_as_is__StrategyTransformer"]
+                //["population", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                //["population", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                //["population", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                //["population", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                //["population", "C__replace_0_with_nan__StrategyTransformer"]
+                ["population", "C__replace_outliers_with_mean__StrategyTransformer"] // *** CONFIRMED BEST ACCURACY ***
+                //["population", "C__replace_outliers_with_median__StrategyTransformer"]
+                //["population", "C__replace_outliers_with_median__StrategyTransformer"]
+                //["population", "C__leave_it_as_is__StrategyTransformer"]
+            ] 
         }
     },
 
