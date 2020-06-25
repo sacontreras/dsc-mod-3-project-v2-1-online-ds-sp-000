@@ -171,6 +171,8 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
     idx_term_map = tfidf_vocab_to_idx_map(tfidf_vectorizer.vocabulary_)
     display(HTML(f"<pre>{s_all_done}</pre>"))
     feat_name_after_tfidf = f"{feat}_after_tfidf"
+
+    # now fit docs to tf-idf vectors
     display(HTML(f"<p><br>fitting DIRTY <i>{feat}</i> documents to <code>TF-IDF</code> vectors..."))
     df_copy[feat_name_after_tfidf] = df_copy[feat].apply(
         lambda _feat: doc_to_tfidf_fit(_feat, tfidf_vectorizer, idx_term_map)[0][0]
@@ -187,13 +189,15 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
     display(HTML(f"<p><br>info: mean_cluster_size=={mean_cluster_size}; calculated entropy: {_entropy}"))
     if mean_cluster_size is None:
         mean_cluster_size = _entropy
-        display(HTML(f"<p><br>set mean_cluster_size=={mean_cluster_size}"))
+        display(HTML(f"<p><br>set mean_cluster_size={mean_cluster_size}"))
         
     # build KMeans model
     n_clusters = int(len(corpus)/mean_cluster_size) # 8 is default n_clusters value for KMeans
     kmeans, df_kmeans_clusters = _kmeans_from_tfidf(tfidf, idx_term_map, n_clusters)
 
-    # add new "class" feature
+    # finally, fit docs to the new tfidf kmeans class - this adds new f"{feat}_tfidf_kmeans_class" feature
+    #   note that this is what should be use to classify, for example, the test/validation date set
+    #   a new model should NOT be built for the test/validation date set
     df_copy, feat_name_class = _tfidf_kmeans_classify_feature(
         df_copy, 
         feat, 
@@ -234,3 +238,126 @@ def tfidf_kmeans_classify_feature(df, df_name, feat, mean_cluster_size=None, ver
         display(HTML(df_kmeans_clusters.sort_values(by='frequency', ascending=False).to_html(notebook=True, justify='left', max_rows=display_max_rows)))    
 
     return df_copy, corpus, tfidf, tfidf_vectorizer, kmeans, df_kmeans_clusters
+
+def tfidf_kmeans_classify_feature__fit(df, df_name, feat, mean_cluster_size=None, verbosity=1):
+    """
+    IMPORTANT!  Set mean_cluster_size only if you want to OVERRIDE the default beahvior to base KMeans n_clusters on entropy of TF-IDF doc distribution.
+        
+        *** IN GENERAL, THIS IS A BAD IDEA UNLESS YOU HAVE AN EXPLICIT REASON FOR DOING SO! ***
+    """
+
+    # first replace null values
+    replace_null_rules = {}
+    replace_null_rules[feat] = [
+        {
+            'missing_values': np.nan,
+            'strategy': 'constant', 
+            'fill_value': 'None'
+        }
+    ]
+    svt_null_predictors = SimpleValueTransformer(replace_null_rules)
+    df_copy = svt_null_predictors.fit_transform(df).copy()
+
+    # fit TF-IDF to the corpus
+    corpus, tfidf, tfidf_vectorizer = _tfidf_fit_corpus_from_feat(df_copy, feat)
+
+    # for display to the reader to show the evolution from DIRTY to TF-IDF "cleaned"
+    # add the result of the first step of preprocessing: coverting to lower-case
+    feat_name_stripped_lcase = f"{feat}_stripped_lcase"
+    df_copy[feat_name_stripped_lcase] = df_copy[feat].apply(preprocess__lcase_strip)
+    # add the result of the next step of preprocessing: tokenization
+    feat_name_word_tokenized = f"{feat}_word_tokenized"
+    df_copy[feat_name_word_tokenized] = df_copy[feat_name_stripped_lcase].apply(preprocess__tokenize)
+    # add the result of the next step of preprocessing: remove stop-words
+    feat_name_word_tokenized_no_stopwords = f"{feat}_word_tokenized_no_stopwords"
+    df_copy[feat_name_word_tokenized_no_stopwords] = df_copy[feat_name_word_tokenized].apply(
+        lambda feat_word_tokenized: preprocess__filter_stopwords(feat_word_tokenized, is_list=True)[0]
+    )
+    # do this beforehand to avoid recomputing it every time, should we pass in more than one document (installer)... which we do below
+    display(HTML(f"<p><br>building the idx term map..."))
+    idx_term_map = tfidf_vocab_to_idx_map(tfidf_vectorizer.vocabulary_)
+    display(HTML(f"<pre>{s_all_done}</pre>"))
+    feat_name_after_tfidf = f"{feat}_after_tfidf"
+
+    # now fit docs to tf-idf vectors
+    display(HTML(f"<p><br>fitting DIRTY <i>{feat}</i> documents to <code>TF-IDF</code> vectors..."))
+    df_copy[feat_name_after_tfidf] = df_copy[feat].apply(
+        lambda _feat: doc_to_tfidf_fit(_feat, tfidf_vectorizer, idx_term_map)[0][0]
+    )
+    display(HTML(f"<pre>{s_all_done}</pre>"))
+    if verbosity > 1:
+        cols_for_this_feat = [feat, feat_name_stripped_lcase, feat_name_word_tokenized, feat_name_word_tokenized_no_stopwords, feat_name_after_tfidf]
+        display(HTML(f"<h3>First few rows of {df_name} TF-IDF DataFrame (verbosity>1)</h3>"))
+        display(HTML(df_copy[cols_for_this_feat].head(10).to_html()))
+
+    # THIS PART IS KEY!  Entropy is the basis for setting the proper cluster size and hence the proper n_clusters parameter to build the KMeans model!
+    dist_normalized = df_copy[feat_name_after_tfidf].value_counts(normalize=True)
+    _entropy = entropy(dist_normalized, base=2)
+    display(HTML(f"<p><br>info: mean_cluster_size=={mean_cluster_size}; calculated entropy: {_entropy}"))
+    if mean_cluster_size is None:
+        mean_cluster_size = _entropy
+        display(HTML(f"<p><br>set mean_cluster_size={mean_cluster_size}"))
+        
+    # build KMeans model
+    n_clusters = int(len(corpus)/mean_cluster_size) # 8 is default n_clusters value for KMeans
+    kmeans, df_kmeans_clusters = _kmeans_from_tfidf(tfidf, idx_term_map, n_clusters)
+
+    # clean up df_copy
+    df_copy = df_copy.drop(
+        [
+            feat_name_stripped_lcase,
+            feat_name_word_tokenized,
+            feat_name_word_tokenized_no_stopwords,
+            feat_name_after_tfidf
+        ], 
+        axis=1
+    )
+
+    return corpus, tfidf, tfidf_vectorizer, idx_term_map, kmeans, df_kmeans_clusters
+
+def tfidf_kmeans_classify_feature__transform(df, df_name, feat, tfidf_vectorizer, idx_term_map, kmeans, df_kmeans_clusters, verbosity=1, display_max_rows=25):
+    df_copy = df.copy()
+
+    # finally, fit docs to the new tfidf kmeans class - this adds new f"{feat}_tfidf_kmeans_class" feature
+    #   note that this is what should be use to classify, for example, the test/validation date set
+    #   a new model should NOT be built for the test/validation date set
+    df_copy, feat_name_class = _tfidf_kmeans_classify_feature(
+        df_copy, 
+        feat, 
+        kmeans, 
+        tfidf_vectorizer, 
+        idx_term_map
+    )
+
+    # df_copy = df_copy.drop(
+    #     [
+    #         feat_name_stripped_lcase,
+    #         feat_name_word_tokenized,
+    #         feat_name_word_tokenized_no_stopwords,
+    #         feat_name_after_tfidf
+    #     ], 
+    #     axis=1
+    # )
+
+    if verbosity > 0:
+        display(HTML(f"<h3><i>{feat}</i> to <i>{feat_name_class}</i> Mapping:</h3>"))
+        display(HTML(df_copy[[feat, feat_name_class]].to_html(notebook=True, justify='left', max_rows=display_max_rows)))
+
+        display(HTML(f"<p><br>building distribution plot of {feat_name_class}..."))
+        display(HTML(f"<h3><i>{feat_name_class}</i> Distribution:</h3>"))
+        plt.figure(figsize=(15,6))
+        df_copy[feat_name_class].hist(bins=len(df_kmeans_clusters))
+        plt.show()
+
+
+    display(HTML(f"<p><br>computing <i>frequency</i> of {feat_name_class}..."))
+    df_kmeans_clusters['frequency'] = df_kmeans_clusters.reset_index().centroid_idx.apply(
+        lambda centroid_idx: df_copy[feat_name_class].value_counts()[centroid_idx]
+    )
+    display(HTML(f"<pre>{s_all_done}</pre>"))
+
+    if verbosity > 0:
+        display(HTML(f"<h3><code>KMeans</code> Cluster Centroids (<i>{feat_name_class}</i>), ordered by <i>frequency</i>:</h3>"))
+        display(HTML(df_kmeans_clusters.sort_values(by='frequency', ascending=False).to_html(notebook=True, justify='left', max_rows=display_max_rows))) 
+
+    return df_copy, df_kmeans_clusters

@@ -267,6 +267,38 @@
 
                 //["basin", "C__drop_it__StrategyTransformer"]
             ]
+        },
+
+        "geographic_location": {
+            "description": {
+                "type": "provided",
+                "description": "'Geographic location'"
+            },
+
+            "features": ["region_code", "district_code", "subvillage", "region", "lga", "ward"],
+
+            "preprocessing_strategy": [
+                // region_code is clearly categorical (numeric, not ordinal):
+                ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["region_code", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["region_code", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["region_code", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["region_code", "C__drop_it__StrategyTransformer"],
+
+                // district_code is clearly categorical (numeric, not ordinal):
+                ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["district_code", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["district_code", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["district_code", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["district_code", "C__drop_it__StrategyTransformer"],
+
+
+                //subvillage, region, lga, and ward are string representations of information captured by the above, so there is only one thing to for each
+                ["subvillage", "C__drop_it__StrategyTransformer"],
+                ["region", "C__drop_it__StrategyTransformer"],
+                ["lga", "C__drop_it__StrategyTransformer"],
+                ["ward", "C__drop_it__StrategyTransformer"]
+            ]
         }
     },
 
