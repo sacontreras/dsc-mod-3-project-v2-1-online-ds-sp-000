@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
-from .submodels import tfidf_kmeans_classify_feature
+from .submodels import tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
 from IPython.core.display import HTML, Markdown
 import numpy as np
 import inspect
@@ -28,9 +28,7 @@ class CBaseStrategyTransformer():
     def get_transformer(self, X, y=None): # fitting should occur in the override
         pass
 
-    def fit(self, X, y=None):
-        self.transformer = self.get_transformer(X, y)
-
+    def _append_pipeline(self):
         if self.pipeline_data_preprocessor is not None:
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
             self.pipeline_step = self.pipeline_data_preprocessor.steps[-1]
@@ -38,6 +36,10 @@ class CBaseStrategyTransformer():
                 print(f"strategy \"{self.description}\" appended step {self.pipeline_step} to pipeline")
 
         return self
+
+    def fit(self, X, y=None):
+        self.transformer = self.get_transformer(X, y)
+        return self._append_pipeline()
 
     def transform(self, X):
         X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
@@ -310,16 +312,55 @@ class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
             description=f"tfidf kmeans classify high-cardinality string-categorical: {feat}",
             verbose=verbose
         )
-        
+        self.corpus = None
+        self.tfidf = None
+        self.tfidf_vectorizer = None
+        self.idx_term_map = None
+        self.kmeans = None
+        self.df_kmeans_clusters = None
+    
+    # do the fit here since base fit() wraps it
     def get_transformer(self, X, y=None):
-        return FunctionTransformer(lambda X: tfidf_kmeans_classify_feature(
+        _, self.corpus, self.tfidf, self.tfidf_vectorizer, self.idx_term_map, self.kmeans, self.df_kmeans_clusters = tfidf_kmeans_classify_feature__fit(
+            X, 
+            '', 
+            self.feat, 
+            verbosity=1 if self.verbose else 0
+        )
+        return FunctionTransformer(lambda X: tfidf_kmeans_classify_feature__transform(
                 X, 
                 '', 
                 self.feat, 
-                verbosity=0
+                self.tfidf_vectorizer,
+                self.idx_term_map,
+                self.kmeans,
+                self.df_kmeans_clusters,
+                verbosity=1 if self.verbose else 0
             )[0], 
             validate=False
-        )
+        ) 
+
+    # def transform(self, X):
+        # if self.leave_one_out:
+        #     X_transformed = target_encoder_transform(self.target_encoder, self.feat, X, self.y_encoded)
+        # else:
+        #     X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
+
+        # # now add the step to drop the original feature since we have the new target encoded feature (named f"{feat}_target_encoded"
+        # dct_after_target_encode = DropColumnsTransformer([self.feat])
+        # pipeline_step = None
+        # if self.pipeline_data_preprocessor is not None:
+        #     self.pipeline_data_preprocessor.steps.append([f"drop after target encoding: {self.feat}", dct_after_target_encode])
+        #     pipeline_step = self.pipeline_data_preprocessor.steps[-1]
+        #     if self.verbose:
+        #         print(f"strategy '{self.description}' appended step {pipeline_step} to pipeline")
+
+        # X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
+        # if self.verbose:
+        #     print(f"strategy '{self.description}' dropped feature '{self.feat}' after target encoding")
+        #     print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
+
+        # return X_transformed
 
 
 
