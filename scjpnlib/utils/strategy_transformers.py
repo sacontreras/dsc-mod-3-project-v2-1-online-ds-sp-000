@@ -315,7 +315,7 @@ class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
         return FunctionTransformer(lambda X: tfidf_kmeans_classify_feature(
                 X, 
                 '', 
-                'funder', 
+                self.feat, 
                 verbosity=0
             )[0], 
             validate=False
@@ -610,10 +610,32 @@ class C__weird_literal_value_replacement__latitude__StrategyTransformer(C__value
 
 class C__required_proprocessing__gps_coordinates__StrategyTransformer(CCompositeStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__required_proprocessing__installer__StrategyTransformer, self).__init__(
+        super(C__required_proprocessing__gps_coordinates__StrategyTransformer, self).__init__(
             description="required preprocessing for gps_coordinates", 
             feat_transformer_sequence=[
                 ['latitude', C__weird_literal_value_replacement__latitude__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to gps_coordinates: END *************
+
+
+# ************* StrategyTransformers specific to basin: BEGIN *************
+class C__impute_lcase__basin__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__basin__StrategyTransformer, self).__init__(
+            'basin', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__basin__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__basin__StrategyTransformer, self).__init__(
+            description="required preprocessing for basin", 
+            feat_transformer_sequence=[
+                ['basin', C__impute_lcase__basin__StrategyTransformer]
             ],
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose

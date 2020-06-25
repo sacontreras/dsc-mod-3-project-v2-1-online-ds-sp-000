@@ -1290,10 +1290,11 @@ def display_feature_grouping_header(feat_groupings, group_id, df, df_name):
     display(HTML(f"{feat_groupings[group_id]['features']}<p><br>"))
     analyze_values(df[feat_groupings[group_id]['features']], df_name, standard_options_kargs={'sort_unique_vals':True})
 
-def display_pretty_feature_groupings(feat_groupings):
+def display_pretty_feature_groupings(feat_groupings, include_preprocessing=False):
     feat_groupings_copy = feat_groupings.copy()
-    for group_id, feat_group in feat_groupings_copy.items():
-        if 'preprocessing_strategy' in feat_group:
-            del feat_group['preprocessing_strategy']
+    if not include_preprocessing:
+        for group_id, feat_group in feat_groupings_copy.items():
+            if 'preprocessing_strategy' in feat_group:
+                del feat_group['preprocessing_strategy']
     # print(json.dumps(feat_groupings_copy, indent=4))
     display(HTML(f"<pre>{json.dumps(feat_groupings_copy, indent=4)}</pre>"))
