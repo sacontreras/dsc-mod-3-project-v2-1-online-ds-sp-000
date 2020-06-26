@@ -447,6 +447,159 @@
                 //OR
                 //["permit", "C__drop_it__StrategyTransformer"]
             ] 
+        },
+
+        "wpt_extraction_type_class": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of extraction the waterpoint uses'"
+            },
+
+            "features": ["extraction_type", "extraction_type_group", "extraction_type_class"],
+
+            "preprocessing_strategy": [
+                // extraction_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["extraction_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["extraction_type", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["extraction_type", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["extraction_type", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["extraction_type", "C__drop_it__StrategyTransformer"],
+
+                // extraction_type_group is categorical-string but duplicates extraction_type and extraction_type is the superset - there is only one thing to do:
+                ["extraction_type_group", "C__drop_it__StrategyTransformer"],
+
+                // extraction_type_class is categorical-string but duplicates extraction_type and extraction_type is the superset - there is only one thing to do:
+                ["extraction_type_class", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "wpt_management": {
+            "description": {
+                "type": "provided",
+                "description": "'How the waterpoint is managed'"
+            },
+
+            "features": ["management", "management_group"],
+
+            "preprocessing_strategy": [
+                // management is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["management", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["management", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["management", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["management", "C__drop_it__StrategyTransformer"],
+
+                // management_group is categorical-string but duplicates management and extractiomanagementn_type is the superset - there is only one thing to do:
+                ["management_group", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "payment_frequency_class": {
+            "description": {
+                "type": "provided",
+                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
+            },
+
+            "features": ["payment", "payment_type"],
+
+            "preprocessing_strategy": [
+                // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["payment_type", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["payment_type", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["payment_type", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["payment_type", "C__drop_it__StrategyTransformer"],
+
+                // payment is categorical-string but duplicates payment_type and payment_type is the superset - there is only one thing to do:
+                ["payment", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "water_quality_class": {
+            "description": {
+                "type": "provided",
+                "description": "'The quality of the water'"
+            },
+
+            "features": ["water_quality", "quality_group"],
+
+            "preprocessing_strategy": [
+                // water_quality is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["water_quality", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["water_quality", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["water_quality", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["water_quality", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["water_quality", "C__drop_it__StrategyTransformer"],
+
+                // quality_group is categorical-string but duplicates water_quality - these categoricals are virtually identical so we chose the less wordy one
+                ["quality_group", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "water_quantity_class": {
+            "description": {
+                "type": "provided",
+                "description": "'The quantity of water'"
+            },
+
+            "features": ["quantity", "quantity_group"],
+
+            "preprocessing_strategy": [
+                // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["quantity", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["quantity", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["quantity", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["quantity", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["quantity", "C__drop_it__StrategyTransformer"],
+
+                // quantity_group is categorical-string but these two features are identical in every observation - the feature name "quantity" has fewer characters
+                ["quantity_group", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "water_source_type_class": {
+            "description": {
+                "type": "provided",
+                "description": "'The source of the water'"
+            },
+
+            "features": ["source", "source_type", "source_class"],
+
+            "preprocessing_strategy": [
+                // source is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["source", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["source", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["source", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["source", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["source", "C__drop_it__StrategyTransformer"],
+
+                // source_type is categorical-string but duplicates source:
+                ["source_type", "C__drop_it__StrategyTransformer"],
+
+                // source_class is categorical-string but duplicates source:
+                ["source_class", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "wpt_type_class": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of waterpoint'"
+            },
+
+            "features": ["waterpoint_type", "waterpoint_type_group"],
+
+            "preprocessing_strategy": [
+                // waterpoint_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                ["waterpoint_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], // *** CONFIRMED BEST ACCURACY ***
+                //["waterpoint_type", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["waterpoint_type", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"],
+                //["waterpoint_type", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"],
+                //["waterpoint_type", "C__drop_it__StrategyTransformer"],
+
+                // waterpoint_type_group is categorical-string but duplicates waterpoint_type:
+                ["waterpoint_type_group", "C__drop_it__StrategyTransformer"]
+            ] 
         }
     },
 
