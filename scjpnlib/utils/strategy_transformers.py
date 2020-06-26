@@ -682,3 +682,26 @@ class C__required_proprocessing__basin__StrategyTransformer(CCompositeStrategyTr
             verbose=verbose
         )
 # ************* StrategyTransformers specific to gps_coordinates: END *************
+
+
+# ************* StrategyTransformers specific to public_meeting: BEGIN *************
+class C__missing_value_imputer__public_meeting__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__public_meeting__StrategyTransformer, self).__init__(
+            'public_meeting', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': False}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__public_meeting__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__public_meeting__StrategyTransformer, self).__init__(
+            description="required preprocessing for public_meeting", 
+            feat_transformer_sequence=[
+                ['public_meeting', C__missing_value_imputer__public_meeting__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to public_meeting: END *************

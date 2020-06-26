@@ -236,7 +236,6 @@
 
             "preprocessing_strategy": [
                 // num_private is numeric and 98% of the observations consist of a single value - there is only one thing to do
-                //      C__drop_it__StrategyTransformer
                 ["num_private", "C__drop_it__StrategyTransformer"]
             ]
         },
@@ -312,15 +311,59 @@
             "preprocessing_strategy": [
                 // population is numeric, so options are as follows 
                 //["population", "C__leave_it_as_is__StrategyTransformer"]
+
                 //["population", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
                 //["population", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
                 //["population", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
                 //["population", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
                 //["population", "C__replace_0_with_nan__StrategyTransformer"]
+
                 ["population", "C__replace_outliers_with_mean__StrategyTransformer"] // *** CONFIRMED BEST ACCURACY ***
+
+                //out of curiosity, try stacked mean (on top of mean) outlier replacement
+                //["population", "C__replace_outliers_with_mean__StrategyTransformer"],
+                //["population", "C__replace_outliers_with_mean__StrategyTransformer"]
+
                 //["population", "C__replace_outliers_with_median__StrategyTransformer"]
+
                 //["population", "C__replace_outliers_with_median__StrategyTransformer"]
+
                 //["population", "C__leave_it_as_is__StrategyTransformer"]
+            ] 
+        },
+
+        "public_meeting": {
+            "description": {
+                "type": "provided",
+                "description": "'True/False'"
+            },
+
+            "features": ["public_meeting"],
+
+            "preprocessing_strategy": [
+                // public_meeting is clearly boolean
+                ["public_meeting", "C__required_proprocessing__public_meeting__StrategyTransformer"] // *** CONFIRMED BEST ACCURACY ***
+
+                //OR
+                //["public_meeting", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "recorded_by": {
+            "description": {
+                "type": "provided",
+                "description": "'Group entering this row of data'"
+            },
+
+            "features": ["recorded_by"],
+
+            "preprocessing_strategy": [
+                // recorded_by consists of a single value - there is only one thing to do
+                ["recorded_by", "C__drop_it__StrategyTransformer"]
             ] 
         }
     },
