@@ -365,6 +365,88 @@
                 // recorded_by consists of a single value - there is only one thing to do
                 ["recorded_by", "C__drop_it__StrategyTransformer"]
             ] 
+        },
+
+        "wpt_operator": {
+            "description": {
+                "type": "provided",
+                "description": "'Who operates the waterpoint'"
+            },
+
+            "features": ["scheme_management", "scheme_name"],
+
+            "preprocessing_strategy": [
+                // scheme_management is categorical-string, so leaving it as is is not an option; options are as follows:
+                // *** CONFIRMED BEST ACCURACY ***
+                ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"], 
+                ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"], 
+                //["scheme_management", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"], 
+                //["scheme_management", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"], 
+                //["scheme_management", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_management", "C__drop_it__StrategyTransformer"]
+
+
+                ,
+                // scheme_name is categorical-string, so leaving it as is is not an option; options are as follows:
+                // *** CONFIRMED BEST ACCURACY ***
+                ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"], 
+                ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"], 
+                //["scheme_name", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"], 
+                //["scheme_name", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"], 
+                //["scheme_name", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                //["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
+                //["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
+                //["scheme_name", "C__drop_it__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                //["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                //["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                //["scheme_name", "C__drop_it__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                //["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                //["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                //["scheme_name", "C__drop_it__StrategyTransformer"]
+
+                //["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                //["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                //["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                //["scheme_name", "C__drop_it__StrategyTransformer"]
+
+                //["scheme_name", "C__drop_it__StrategyTransformer"]
+            ] 
+        },
+
+        "permit": {
+            "description": {
+                "type": "provided",
+                "description": "'True/False'"
+            },
+
+            "features": ["permit"],
+
+            "preprocessing_strategy": [
+                // permit is clearly boolean
+                ["permit", "C__required_proprocessing__permit__StrategyTransformer"] // *** CONFIRMED BEST ACCURACY ***
+
+                //OR
+                //["permit", "C__drop_it__StrategyTransformer"]
+            ] 
         }
     },
 

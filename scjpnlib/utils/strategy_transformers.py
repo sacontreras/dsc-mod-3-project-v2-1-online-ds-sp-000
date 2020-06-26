@@ -705,3 +705,109 @@ class C__required_proprocessing__public_meeting__StrategyTransformer(CCompositeS
             verbose=verbose
         )
 # ************* StrategyTransformers specific to public_meeting: END *************
+
+
+# ************* StrategyTransformers specific to wpt_operator: BEGIN *************
+# ************* StrategyTransformers specific to scheme_management: BEGIN *************
+class C__impute_lcase__scheme_management__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__scheme_management__StrategyTransformer, self).__init__(
+            'scheme_management', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__missing_value_imputer__scheme_management__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__scheme_management__StrategyTransformer, self).__init__(
+            'scheme_management', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': 'none'}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__scheme_management__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__scheme_management__StrategyTransformer, self).__init__(
+            description="required preprocessing for scheme_management", 
+            feat_transformer_sequence=[
+                ['scheme_management', C__impute_lcase__scheme_management__StrategyTransformer],
+                ['scheme_management', C__missing_value_imputer__scheme_management__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to scheme_management: END *************
+
+# ************* StrategyTransformers specific to scheme_name: BEGIN *************
+class C__impute_lcase__scheme_name__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__missing_value_imputer__scheme_name__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': 'none'}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__not_known_literal_value_replacement__scheme_name__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__not_known_literal_value_replacement__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            [{'missing_values': 'not known', 'strategy': 'constant', 'fill_value': "unknown"}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__scheme_name__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__scheme_name__StrategyTransformer, self).__init__(
+            description="required preprocessing for scheme_name", 
+            feat_transformer_sequence=[
+                ['scheme_name', C__impute_lcase__scheme_name__StrategyTransformer],
+                ['scheme_name', C__missing_value_imputer__scheme_name__StrategyTransformer],
+                ['scheme_name', C__not_known_literal_value_replacement__scheme_name__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__tfidf_kmeans_classify__scheme_name__StrategyTransformer(C__tfidf_kmeans_classify__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_kmeans_classify__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to scheme_name: END *************
+# ************* StrategyTransformers specific to wpt_operator: BEGIN *************
+
+
+# ************* StrategyTransformers specific to permit: BEGIN *************
+class C__missing_value_imputer__permit__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__permit__StrategyTransformer, self).__init__(
+            'permit', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': False}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__permit__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__permit__StrategyTransformer, self).__init__(
+            description="required preprocessing for permit", 
+            feat_transformer_sequence=[
+                ['permit', C__missing_value_imputer__permit__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to public_meeting: END *************
