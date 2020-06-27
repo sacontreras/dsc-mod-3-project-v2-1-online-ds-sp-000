@@ -255,4 +255,4 @@ def tfidf_kmeans_classify_feature__transform(df, df_name, feat, tfidf_vectorizer
         if len(df_unmapped_classes) > 0:
             display(HTML(f"<h3><code>{len(df_unmapped_classes)} KMeans</code> Cluster Centroids from fit do not ocur in X</h3>"))
 
-    return df_copy, df_kmeans_clusters_copy
+    return df_copy, df_kmeans_clusters_copy, feat_name_class

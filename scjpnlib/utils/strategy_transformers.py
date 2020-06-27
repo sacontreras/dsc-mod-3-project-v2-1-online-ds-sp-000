@@ -28,6 +28,9 @@ class CBaseStrategyTransformer():
     def get_transformer(self, X, y=None): # fitting should occur in the override
         pass
 
+    def get_transformed_feat_name(self):
+        return self.feat
+
     def _append_pipeline(self):
         if self.pipeline_data_preprocessor is not None:
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
@@ -44,7 +47,7 @@ class CBaseStrategyTransformer():
     def transform(self, X):
         X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
         if self.verbose:
-            print(f"strategy \"{self.description}\" transformation for feature \"{self.feat}\" is COMPLETE!")
+            print(f"strategy \"{self.description}\" transformation of feature \"{self.feat}\" is COMPLETE!")
         return X_transformed
 
     def fit_transform(self, X, y=None):
@@ -79,6 +82,9 @@ class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
 
     def get_transformer(self, X, y=None):
         return DropColumnsTransformer([self.feat])
+
+    def get_transformed_feat_name(self):
+        return None
 
 
 
@@ -207,6 +213,9 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             validate=False
         )
 
+    def get_transformed_feat_name(self):
+        return f"{self.feat}_target_encoded"
+
     def transform(self, X):
         if self.leave_one_out:
             X_transformed = target_encoder_transform(self.target_encoder, self.feat, X, self.y_encoded)
@@ -225,7 +234,7 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
         X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
         if self.verbose:
             print(f"strategy '{self.description}' dropped feature '{self.feat}' after target encoding")
-            print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
+            print(f"strategy '{self.description}' transformation of feature '{self.feat}' to '{self.get_transformed_feat_name()}' is COMPLETE!")
 
         return X_transformed
 
@@ -338,30 +347,7 @@ class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
                 verbosity=1 if self.verbose else 0
             )[0], 
             validate=False
-        ) 
-
-    # def transform(self, X):
-        # if self.leave_one_out:
-        #     X_transformed = target_encoder_transform(self.target_encoder, self.feat, X, self.y_encoded)
-        # else:
-        #     X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
-
-        # # now add the step to drop the original feature since we have the new target encoded feature (named f"{feat}_target_encoded"
-        # dct_after_target_encode = DropColumnsTransformer([self.feat])
-        # pipeline_step = None
-        # if self.pipeline_data_preprocessor is not None:
-        #     self.pipeline_data_preprocessor.steps.append([f"drop after target encoding: {self.feat}", dct_after_target_encode])
-        #     pipeline_step = self.pipeline_data_preprocessor.steps[-1]
-        #     if self.verbose:
-        #         print(f"strategy '{self.description}' appended step {pipeline_step} to pipeline")
-
-        # X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
-        # if self.verbose:
-        #     print(f"strategy '{self.description}' dropped feature '{self.feat}' after target encoding")
-        #     print(f"strategy '{self.description}' transformation for feature '{self.feat}' is COMPLETE!")
-
-        # return X_transformed
-
+        )
 
 
 
@@ -396,6 +382,16 @@ class CCompositeStrategyTransformer():
             X_transformed = feat_transformer.fit_transform(X_transformed, y)
         return X_transformed
 
+def colaesce_transformed_feat_names(transformer, lst, debug=False):
+    if not isinstance(transformer, CCompositeStrategyTransformer):
+        transformed_feat_name = transformer.get_transformed_feat_name()
+        if debug:
+            print(f"{transformer.__class__.__name__}: original feat: {transformer.feat}; transformed feat: {transformed_feat_name}")
+        if transformed_feat_name is not None:
+            lst.append(transformed_feat_name)
+    else:
+        for contained_transformer in transformer.feat_transformer_sequence:
+            colaesce_transformed_feat_names(contained_transformer, lst, debug)
 
 
 
@@ -413,8 +409,6 @@ class BadCtorSignature(Exception):
 def instantiate_strategy_transformer(strategy_composition, description, pipeline):
     feat_transformer_sequence = []
     for strategy_component in strategy_composition:
-        # print(f"strategy component feat: {strategy_component[0]}")
-        # print(f"strategy component class-name: {strategy_component[1]}")
         StratTransformerClass = strategy_transformer_name_to_class(strategy_component[1])
 
         # check ctor signature - it must match required sig which is 4 args: self, feat, pipeline_data_preprocessor, verbose
@@ -619,7 +613,7 @@ class C__not_known_literal_value_replacement__installer__StrategyTransformer(C__
 class C__required_proprocessing__installer__StrategyTransformer(CCompositeStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__required_proprocessing__installer__StrategyTransformer, self).__init__(
-            description="required preprocessing for funder", 
+            description="required preprocessing for installer", 
             feat_transformer_sequence=[
                 ['installer', C__impute_lcase__installer__StrategyTransformer],
                 ['installer', C__missing_value_imputer__installer__StrategyTransformer],
