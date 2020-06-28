@@ -132,14 +132,20 @@ def _tfidf_kmeans_classify_feature(df, feat, kmeans, tfidf_vectorizer, idx_term_
     return df, feat_name_class
 
 
-# returns corpus, tfidf, tfidf_vectorizer
 def tfidf_fit(df, df_name, feat):
     df_copy = df.copy()
 
     # fit TF-IDF to the corpus
-    return _tfidf_fit_corpus_from_feat(df_copy, feat)
+    corpus, tfidf, tfidf_vectorizer = _tfidf_fit_corpus_from_feat(df_copy, feat)
+
+    # do this beforehand to avoid recomputing it every time, should we pass in more than one document (installer)... which we do below
+    display(HTML(f"<p><br>building the idx term map..."))
+    idx_term_map = tfidf_vocab_to_idx_map(tfidf_vectorizer.vocabulary_)
+    display(HTML(f"<pre>{s_all_done}</pre>"))
     
-def tfidf_transform(df, df_name, feat):
+    return corpus, tfidf, tfidf_vectorizer, idx_term_map
+    
+def tfidf_transform(df, df_name, feat, tfidf_vectorizer, idx_term_map):
     df_copy = df.copy()
     
     # for display to the reader to show the evolution from DIRTY to TF-IDF "cleaned"
@@ -154,15 +160,11 @@ def tfidf_transform(df, df_name, feat):
     df_copy[feat_name_word_tokenized_no_stopwords] = df_copy[feat_name_word_tokenized].apply(
         lambda feat_word_tokenized: preprocess__filter_stopwords(feat_word_tokenized, is_list=True)[0]
     )
-
-    # do this beforehand to avoid recomputing it every time, should we pass in more than one document (installer)... which we do below
-    display(HTML(f"<p><br>building the idx term map..."))
-    idx_term_map = tfidf_vocab_to_idx_map(tfidf_vectorizer.vocabulary_)
-    display(HTML(f"<pre>{s_all_done}</pre>"))
+    
     feat_name_after_tfidf = f"{feat}_after_tfidf"
 
     # now fit docs to tf-idf vectors
-    display(HTML(f"<p><br>fitting DIRTY <i>{feat}</i> documents to <code>TF-IDF</code> vectors..."))
+    display(HTML(f"<p><br>mapping DIRTY <i>{feat}</i> documents to <code>TF-IDF</code> vectors..."))
     df_copy[feat_name_after_tfidf] = df_copy[feat].apply(
         lambda _feat: doc_to_tfidf_fit(_feat, tfidf_vectorizer, idx_term_map)[0][0]
     )

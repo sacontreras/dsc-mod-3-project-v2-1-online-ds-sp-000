@@ -68,7 +68,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             "array": [
                 {
@@ -155,7 +155,7 @@
         //
         // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
         "params": {   
-            "bootstrap": false,
+            "bootstrap": true,
             "criterion": "gini",
             "max_depth": 75,
             "max_features": "auto",
@@ -201,14 +201,24 @@
                         //          in this way, we can turn on/off gridsearch for individual trials
                         //
                         // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
+                        "last_best":
+                        /*
                         "last_best": {   
                             "gamma": 2,
                             "learning_rate": 0.1,
                             "max_depth": 22,
                             "min_child_weight": 1,
-                            "n_estimators": 100,
-                            "n_jobs": -1
+                            "n_estimators": 100
                         }
+                        */
+                        
+                        {   
+                            "gamma": 1,
+                            "learning_rate": 0.1,
+                            "max_depth": 22,
+                            "min_child_weight": 3,
+                            "n_estimators": 100
+                       }
                     }
                 }
             ]
@@ -216,15 +226,26 @@
 
         // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
         //      these will be used when ['XGBClassifier']['trials']['run']==false
+        //      make manual adjust ments as desired here
         //
         // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
-        "params": {   
+        "params": 
+        /*
+        {   
             "gamma": 2,
             "learning_rate": 0.1,
             "max_depth": 22,
             "min_child_weight": 1,
-            "n_estimators": 100,
-            "n_jobs": -1
+            "n_estimators": 100
+        }
+        */
+
+        {   
+            "gamma": 1,
+            "learning_rate": 0.1,
+            "max_depth": 22,
+            "min_child_weight": 3,
+            "n_estimators": 100
         }
     }
 }

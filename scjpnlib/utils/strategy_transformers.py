@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
-from .submodels import tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
+from .submodels import tfidf_fit, tfidf_transform, tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
 from IPython.core.display import HTML, Markdown
 import numpy as np
 import inspect
@@ -329,6 +329,38 @@ class C__convert_to_arbitrary_type__StrategyTransformer(CBaseStrategyTransformer
 
 
 
+class C__tfidf_normalize__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__tfidf_normalize__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"tfidf normalize string-categorical: {feat}",
+            verbose=verbose
+        )
+        self.corpus = None
+        self.tfidf = None
+        self.tfidf_vectorizer = None
+        self.idx_term_map = None
+        
+    # do the fit here since base fit() wraps it
+    def get_transformer(self, X, y=None):
+        self.corpus, self.tfidf, self.tfidf_vectorizer, self.idx_term_map = tfidf_fit(
+            X, 
+            '', 
+            self.feat
+        )
+        return FunctionTransformer(lambda X: tfidf_transform(
+                X, 
+                '', 
+                self.feat, 
+                self.tfidf_vectorizer,
+                self.idx_term_map
+            ), 
+            validate=False
+        )
+    
+    
+    
 class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
         super(C__tfidf_kmeans_classify__StrategyTransformer, self).__init__(
@@ -627,6 +659,14 @@ class C__required_proprocessing__funder__StrategyTransformer(CCompositeStrategyT
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
+        
+class C__tfidf_normalize__funder__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_normalize__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
 
 class C__tfidf_kmeans_classify__funder__StrategyTransformer(C__tfidf_kmeans_classify__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -682,6 +722,14 @@ class C__required_proprocessing__installer__StrategyTransformer(CCompositeStrate
             verbose=verbose
         )
 
+class C__tfidf_normalize__installer__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_normalize__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
 class C__tfidf_kmeans_classify__installer__StrategyTransformer(C__tfidf_kmeans_classify__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__tfidf_kmeans_classify__installer__StrategyTransformer, self).__init__(
@@ -829,6 +877,14 @@ class C__required_proprocessing__scheme_name__StrategyTransformer(CCompositeStra
                 ['scheme_name', C__not_known_literal_value_replacement__scheme_name__StrategyTransformer]
             ],
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__tfidf_normalize__scheme_name__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_normalize__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            pipeline_data_preprocessor, 
             verbose=verbose
         )
 
