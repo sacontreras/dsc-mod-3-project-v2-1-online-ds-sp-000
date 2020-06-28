@@ -26,8 +26,6 @@
 
     //the random_state seed used throughout the project
     "SEED": 42,
-
-    "missing_string_value_replacement": "none",
     
 
 
@@ -60,92 +58,7 @@
                 ]
             }
         },
-
-        "pump_age_at_observation_date__group": {
-            "description": {
-                "type": "engineered",
-                "description": "'The date the row was entered' - 'Year the waterpoint was constructed'"
-            },
-
-            "features": ["date_recorded", "construction_year"],
-
-            "preprocessing_options": {
-                // pump_age is a NEW/engineered feature, so there is only one option (which is done in required preprocessing) (or we can drop it):
-                "pump_age": [
-                    [
-                        ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"],
-                        ["pump_age", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    [["pump_age", "C__drop_it__StrategyTransformer"]]
-                ]
-            }
-        },
-
-        "funder__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Who funded the well'"
-            },
-
-            "features": ["funder"],
-
-            "preprocessing_options": {
-                // funder is categorical-string, so leaving it as is is not an option
-                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
-                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
-                //      options are as follows:
-                "funder": [
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    */
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    [
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-
+        
         "gps_height__group": {
             "description": {
                 "type": "provided",
@@ -168,69 +81,7 @@
                 ]
             }
         },
-
-        "installer__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Organization that installed the well'"
-            },
-
-            "features": ["installer"],
-
-            "preprocessing_options": {
-                // installer is categorical-string, so leaving it as is is not an option; options are as follows:
-                "installer": [
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    */
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    [
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-
+        
         "gps_coordinates__group": {
             "description": {
                 "type": "provided",
@@ -246,8 +97,7 @@
                 //NO outlier processing!
                 "gps_coordinates": [
                     [
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"],
-                        [["gps_height", "C__leave_it_as_is__StrategyTransformer"]]
+                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"]
                     ],
                     [
                         ["latitude", "C__drop_it__StrategyTransformer"],
@@ -256,7 +106,7 @@
                 ]
             }
         },
-
+        
         "wpt_name__group": {
             "description": {
                 "type": "provided",
@@ -284,7 +134,7 @@
                 "num_private": [[["num_private", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
+        
         "basin__group": {
             "description": {
                 "type": "provided",
@@ -318,7 +168,7 @@
                 ]
             }
         },
-
+        
         "geographic_location__group": {
             "description": {
                 "type": "provided",
@@ -432,92 +282,7 @@
                 ]
             }
         },
-
-        "wpt_operator__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Who operates the waterpoint'"
-            },
-
-            "features": ["scheme_management", "scheme_name"],
-
-            "preprocessing_options": {
-                // scheme_management is categorical-string, so leaving it as is is not an option; options are as follows:
-                "scheme_management": [
-                    [
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    */
-                    [["scheme_management", "C__drop_it__StrategyTransformer"]]
-                ],
-
-                // scheme_name is categorical-string, so leaving it as is is not an option; options are as follows:
-                "scheme_name": [
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                    */
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    /*
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    [
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-
+        
         "permit__group": {
             "description": {
                 "type": "provided",
@@ -646,7 +411,7 @@
 
             "preprocessing_options": {
                 // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
-                "water_quality": [
+                "quantity": [
                     [["quantity", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
                     /*
                     [["quantity", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]],
@@ -707,6 +472,254 @@
                 ],
 
                 "waterpoint_type_group": [[["waterpoint_type_group", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+        "pump_age_at_observation_date__group": {
+            "description": {
+                "type": "engineered",
+                "description": "'The date the row was entered' - 'Year the waterpoint was constructed'"
+            },
+
+            "features": ["date_recorded", "construction_year"],
+
+            "preprocessing_options": {
+                // pump_age is a NEW/engineered feature, so there is only one option (which is done in required preprocessing) (we can NOT create it, which would mean leaving date_recorded and construction_year as is):
+                "pump_age": [
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"], // date_recorded starts as a string so we cannot use it as is
+                        ["construction_year", "C__leave_it_as_is__StrategyTransformer"] // construction_year starts as an int so we CAN use it as is
+                    ],
+                    [
+                        ["date_recorded", "C__required_proprocessing__date_recorded__StrategyTransformer"], // date_recorded starts as a string, this converts it to datetime type
+                        ["construction_year", "C__required_proprocessing__construction_year__StrategyTransformer"], // construction_year starts as an int, this converts it to datetime type and replaces some weird values
+                        ["construction_year", "C__convert_to_int__construction_year__StrategyTransformer"],
+                        ["date_recorded", "C__convert_to_int__date_recorded__StrategyTransformer"]  // we need to do this last since C__required_proprocessing__construction_year__StrategyTransformer uses date_recorded (as datetime type)
+                    ],
+                    [
+                        ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"]
+                    ],
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__drop_it__StrategyTransformer"]    
+                    ]
+                ]
+            }
+        },
+
+
+
+
+        //these are the HARD, processing intensive feature-groups
+        "funder__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Who funded the well'"
+            },
+
+            "features": ["funder"],
+
+            "preprocessing_options": {
+                // funder is categorical-string, so leaving it as is is not an option
+                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
+                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
+                //      options are as follows:
+                "funder": [
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    */
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    [
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "installer__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Organization that installed the well'"
+            },
+
+            "features": ["installer"],
+
+            "preprocessing_options": {
+                // installer is categorical-string, so leaving it as is is not an option; options are as follows:
+                "installer": [
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    */
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    [
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "wpt_operator__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Who operates the waterpoint'"
+            },
+
+            "features": ["scheme_management", "scheme_name"],
+
+            "preprocessing_options": {
+                // scheme_management is categorical-string, so leaving it as is is not an option; options are as follows:
+                "scheme_management": [
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    */
+                    [["scheme_management", "C__drop_it__StrategyTransformer"]]
+                ],
+
+                // scheme_name is categorical-string, so leaving it as is is not an option; options are as follows:
+                "scheme_name": [
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                    */
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
+                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    /*
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    [
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ]
+                ]
             }
         }
     },

@@ -1,6 +1,6 @@
 import importlib
 from abc import ABC, abstractmethod
-from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type
+from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
 from .submodels import tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
@@ -313,6 +313,22 @@ class C__convert_string_date_to_datetime__StrategyTransformer(CBaseStrategyTrans
 
 
 
+class C__convert_to_arbitrary_type__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, to_type, pipeline_data_preprocessor, verbose=False):
+        super(C__convert_to_arbitrary_type__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"convert to {to_type} type: {feat}",
+            verbose=verbose
+        )
+        self.to_type = to_type
+        
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: convert_col_type(X, self.feat, self.to_type), validate=False)
+
+
+
+
 class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
         super(C__tfidf_kmeans_classify__StrategyTransformer, self).__init__(
@@ -429,7 +445,7 @@ def _html_prettify_strategy_transformer_description(strategy_transformer):
         s_html += "</ol>"
         return s_html
     else:
-        return f"<b>strategy description</b>: <i><font color='blue'>{strategy_transformer.description}</font></i>"
+        return f"<b>strategy description</b>: <i><big><font color='blue'>{strategy_transformer.description}</font></big></i>"
 
 def html_prettify_strategy_transformer_description(strategy_transformer):
     display(HTML(_html_prettify_strategy_transformer_description(strategy_transformer)))
@@ -446,7 +462,7 @@ def html_prettify_strategy_transformer_description(strategy_transformer):
 
 # Below are strategy transformers that are specific to features
 
-# ************* StrategyTransformers specific to pump_age: BEGIN *************
+# ************* StrategyTransformers specific to pump_age (and construction_year, date_recorded): BEGIN *************
 class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__convert_string_date_to_datetime__date_recorded__StrategyTransformer, self).__init__(
@@ -455,6 +471,28 @@ class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+class C__required_proprocessing__date_recorded__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__date_recorded__StrategyTransformer, self).__init__(
+            description="required preprocessing for date_recorded", 
+            feat_transformer_sequence=[
+                ['date_recorded', C__convert_string_date_to_datetime__date_recorded__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+# requires C__required_proprocessing__date_recorded__StrategyTransformer to be done first
+class C__convert_to_int__date_recorded__StrategyTransformer(C__convert_to_arbitrary_type__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__convert_to_int__date_recorded__StrategyTransformer, self).__init__(
+            'date_recorded',
+            to_type='int',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
 
 class C__replace_0_construction_year_with_date_recorded__StrategyTransformer(CBaseStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -481,6 +519,28 @@ class C__convert_string_date_to_datetime__construction_year__StrategyTransformer
         super(C__convert_string_date_to_datetime__construction_year__StrategyTransformer, self).__init__(
             'construction_year',
             from_format="%Y",
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__required_proprocessing__construction_year__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__construction_year__StrategyTransformer, self).__init__(
+            description="required preprocessing for construction_year", 
+            feat_transformer_sequence=[
+                ['construction_year', C__replace_0_construction_year_with_date_recorded__StrategyTransformer],
+                ['construction_year', C__convert_string_date_to_datetime__construction_year__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+# requires C__required_proprocessing__construction_year__StrategyTransformer to be done first
+class C__convert_to_int__construction_year__StrategyTransformer(C__convert_to_arbitrary_type__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__convert_to_int__construction_year__StrategyTransformer, self).__init__(
+            'construction_year',
+            to_type='int',
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
@@ -513,9 +573,8 @@ class C__required_proprocessing__pump_age__StrategyTransformer(CCompositeStrateg
         super(C__required_proprocessing__pump_age__StrategyTransformer, self).__init__(
             description="required preprocessing for pump_age", 
             feat_transformer_sequence=[
-                ['date_recorded', C__convert_string_date_to_datetime__date_recorded__StrategyTransformer],
-                ['construction_year', C__replace_0_construction_year_with_date_recorded__StrategyTransformer],
-                ['construction_year', C__convert_string_date_to_datetime__construction_year__StrategyTransformer],
+                ['date_recorded', C__required_proprocessing__date_recorded__StrategyTransformer],
+                ['construction_year', C__required_proprocessing__construction_year__StrategyTransformer],
                 ['pump_age', C__create_pump_age_feature_from_date_recorded_and_construction_year__StrategyTransformer],
                 ['date_recorded', C__drop_it__StrategyTransformer],
                 ['construction_year', C__drop_it__StrategyTransformer]
@@ -523,7 +582,7 @@ class C__required_proprocessing__pump_age__StrategyTransformer(CCompositeStrateg
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
-# ************* StrategyTransformers specific to pump_age: END *************
+# ************* StrategyTransformers specific to pump_age (and construction_year, date_recorded): END *************
 
 
 # ************* StrategyTransformers specific to funder: BEGIN *************

@@ -1191,9 +1191,9 @@ def json_to_md5_hash_digest(json_object):
     hashed_json_object_as_string = hashlib.md5(json_object_as_string.encode()) # UTF-8 is default
     return hashed_json_object_as_string.hexdigest()
 
-def get_data_fname(eda_cfg, data_kwargs):
+def get_data_fname(eda_cfg, preprocessing_options_cfg, data_kwargs):
     is_data_cached = 'is_cached' in data_kwargs and data_kwargs['is_cached']
-    digest_str = eda_cfg['digest'] if is_data_cached else json_to_md5_hash_digest(eda_cfg)
+    digest_str = eda_cfg['digest'] if is_data_cached else json_to_md5_hash_digest(preprocessing_options_cfg)
     #print(f"eda_cfg as md5 hash digest: {digest_str}")
 
     if data_kwargs['is_labels']: # then we want the fname for labels
@@ -1209,6 +1209,13 @@ def get_model_result_fname(eda_cfg, data_kwargs):
     #print(f"eda_cfg as md5 hash digest: {digest_str}")
 
     return f"models-results-{digest_str}.json"
+
+def get_preprocessing_options_fname(eda_cfg, preprocessing_options_cfg, data_kwargs=None):
+    is_data_cached = data_kwargs is not None and 'is_cached' in data_kwargs and data_kwargs['is_cached']
+    digest_str = eda_cfg['digest'] if is_data_cached else json_to_md5_hash_digest(preprocessing_options_cfg)
+    #print(f"eda_cfg as md5 hash digest: {digest_str}")
+
+    return f"preprocessing-options-{digest_str}.json"
 
 
 def find_weird_vals(df, df_name, regx_weird_val=r"\b[^a-zA-Z]+\b", suppress_output=False):
