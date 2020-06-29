@@ -918,6 +918,8 @@ def analyze_distributions__top_n(
         suppress_values=True, 
         suppress_output=suppress_output
     )
+    
+    truncate_sig_after_n = min(top_n, truncate_sig_after_n)
 
     all_unique = df[feat].unique()
     n_all_unique = len(all_unique)
@@ -943,7 +945,8 @@ def analyze_distributions__top_n(
             sig_cats = all_cats[:truncate_sig_after_n]
             sig_densities = [sc[1][1] for sc in sig_cats]
             sig_counts = [sc[1][0] for sc in sig_cats]
-            sig_cats.extend([(f'** TRUNCATED SIGNIFICANT ({len(all_cats)-truncate_sig_after_n} categories) **', (sum(all_counts)-sum(sig_counts), sum(all_densities)-sum(sig_densities)))])
+            if len(all_cats)-truncate_sig_after_n > 0:
+                sig_cats.extend([(f'** TRUNCATED SIGNIFICANT ({len(all_cats)-truncate_sig_after_n} categories) **', (sum(all_counts)-sum(sig_counts), sum(all_densities)-sum(sig_densities)))])
 
         densities = [sig_cat[1][1] for sig_cat in sig_cats]
         counts = [sig_cat[1][0] for sig_cat in sig_cats]
@@ -1287,8 +1290,8 @@ def pipeline__fit_transform(pipeline_to_copy, X_to_fit, y_to_fit, X_to_transform
 
 
 def display_feature_grouping_header(feat_groupings, group_id, df, df_name):
-    display(HTML(f"<h3>Feature grouping: <i><a id='{group_id}'>{group_id}</a></i></h3>"))
-    display(HTML(f"<h4>Type: <font color='red'>{feat_groupings[group_id]['description']['type']}</font></h4>"))
+    display(HTML(f"<h3>Feature grouping: <i><a id='{group_id}'><font color='red'>{group_id}</font></a></i></h3>"))
+    display(HTML(f"<h4>Type: <i>{feat_groupings[group_id]['description']['type']}</i></h4>"))
     display(HTML(f"<h4>Description:</h4>"))
     desc = feat_groupings[group_id]['description']['description']
     desc = desc if desc is not None and len(desc.strip())>0 else "<i>None provided.</i>"

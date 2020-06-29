@@ -185,6 +185,11 @@
                 //NO outlier processing!
                 "gps_coordinates": [
                     [
+                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
+                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
+                    ],
+
+                    [
                         ["latitude", "C__drop_it__StrategyTransformer"],
                         ["longitude", "C__drop_it__StrategyTransformer"]
                     ],
@@ -249,11 +254,10 @@
                         ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
                         ["installer", "C__tfidf_normalize__installer__StrategyTransformer"],
                         ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
+                    ],
 
                     //KMeans classification (clusters) on top of NLP TFIDF normalization
                     /*
-                    ,
                     [
                         ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
                         ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
@@ -265,8 +269,14 @@
                         ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
                         ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
                         ["installer", "C__drop_it__StrategyTransformer"]
-                    ]
+                    ],
                     */
+                    
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__top_n_significance__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
                 ]
             }
         },
@@ -290,7 +300,7 @@
                     [["population", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
                     [["population", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]],
                     
-                    //treat as continuous
+                    //if we treat as continuous
                     [["population", "C__replace_0_with_nan__StrategyTransformer"]],
                     [["population", "C__replace_outliers_with_mean__StrategyTransformer"]],
                     [ //out of curiosity, try stacked mean (on top of mean) outlier replacement since EDA showed this removes ALL outliers
@@ -319,6 +329,14 @@
                     [["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
                     [["region_code", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]]
                 ],
+                
+                "region": [
+                    [["region", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    [["region", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]]
+                ],
 
                 // district_code is clearly categorical (numeric, not ordinal):
                 "district_code": [
@@ -328,12 +346,35 @@
                     [["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
                     [["district_code", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]]
                 ],
+                
+                "lga": [
+                    [["lga", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    [["lga", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]]
+                ],
+                
+                "ward": [
+                    [["ward", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    [["ward", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["ward", "C__tfidf_normalize__ward__StrategyTransformer"],
+                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    [
+                        ["ward", "C__top_n_significance__ward__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
 
-                //these are strings but the information is mostly captured by region_code + district_code
-                "subvillage": [[["subvillage", "C__drop_it__StrategyTransformer"]]],
-                "region": [[["region", "C__drop_it__StrategyTransformer"]]],
-                "lga": [[["lga", "C__drop_it__StrategyTransformer"]]],
-                "ward": [[["ward", "C__drop_it__StrategyTransformer"]]]
+                "subvillage": [[["subvillage", "C__drop_it__StrategyTransformer"]]]
             }
         },
         
@@ -382,11 +423,10 @@
                         ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
                         ["scheme_name", "C__tfidf_normalize__scheme_name__StrategyTransformer"],
                         ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
+                    ],
 
                     //KMeans classification (clusters) on top of NLP TFIDF normalization
                     /*
-                    ,
                     [
                         ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
                         ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
@@ -398,8 +438,14 @@
                         ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
                         ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
                         ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ]
+                    ],
                     */
+                    
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__top_n_significance__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
                 ]
             }
         },
@@ -472,7 +518,12 @@
 
             "preprocessing_options": {
                 // num_private is numeric and 98% of the observations consist of a single value - there is only one thing to do
-                "num_private": [[["num_private", "C__drop_it__StrategyTransformer"]]]
+                "num_private": [
+                    [["num_private", "C__drop_it__StrategyTransformer"]],
+                    
+                    //IF for some weird reason the non-nulls are significant...
+                    [["num_private", "C__replace_0_with_nan__StrategyTransformer"]]
+                ]
             }
         },
         
@@ -631,11 +682,10 @@
                         ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
                         ["funder", "C__tfidf_normalize__funder__StrategyTransformer"],
                         ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
+                    ],
 
                     //KMeans classification (clusters) on top of NLP TFIDF normalization
                     /*
-                    ,
                     [
                         ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
                         ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
@@ -647,8 +697,14 @@
                         ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
                         ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__not_post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
                         ["funder", "C__drop_it__StrategyTransformer"]
-                    ]
+                    ],
                     */
+                    
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__top_n_significance__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
                 ]
             }
         }

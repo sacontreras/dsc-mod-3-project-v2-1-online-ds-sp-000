@@ -1,6 +1,6 @@
 import importlib
 from abc import ABC, abstractmethod
-from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type
+from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type, analyze_distributions__top_n
 from sklearn.preprocessing import FunctionTransformer
 from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
 from .submodels import tfidf_fit, tfidf_transform, tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
@@ -36,7 +36,7 @@ class CBaseStrategyTransformer():
             self.pipeline_data_preprocessor.steps.append([self.description, self.transformer])
             self.pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
-                print(f"strategy \"{self.description}\" appended step {self.pipeline_step} to pipeline")
+                print(f"strategy appended step {self.pipeline_step} to pipeline")
 
         return self
 
@@ -47,7 +47,7 @@ class CBaseStrategyTransformer():
     def transform(self, X):
         X_transformed = self.pipeline_step[1].transform(X) if self.pipeline_step is not None else self.transformer.fit_transform(X)
         if self.verbose:
-            print(f"strategy \"{self.description}\" transformation of feature \"{self.feat}\" is COMPLETE!")
+            print(f"strategy \"{self.description}\" transformation is COMPLETE!")
         return X_transformed
 
     def fit_transform(self, X, y=None):
@@ -229,12 +229,12 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             self.pipeline_data_preprocessor.steps.append([f"drop after target encoding: {self.feat}", dct_after_target_encode])
             pipeline_step = self.pipeline_data_preprocessor.steps[-1]
             if self.verbose:
-                print(f"strategy '{self.description}' appended step {pipeline_step} to pipeline")
+                print(f"strategy appended step {pipeline_step} to pipeline")
 
         X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
         if self.verbose:
-            print(f"strategy '{self.description}' dropped feature '{self.feat}' after target encoding")
-            print(f"strategy '{self.description}' transformation of feature '{self.feat}' to '{self.get_transformed_feat_name()}' is COMPLETE!")
+            print(f"strategy \"{self.description}\" dropped feature '{self.feat}' after target encoding")
+            print(f"strategy transformation of feature '{self.feat}' to '{self.get_transformed_feat_name()}' is COMPLETE!")
 
         return X_transformed
 
@@ -400,6 +400,41 @@ class C__tfidf_kmeans_classify__StrategyTransformer(CBaseStrategyTransformer):
 
 
 
+class C__top_n_significance__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, top_n, insig_map_to, pipeline_data_preprocessor, verbose=False):
+        super(C__top_n_significance__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"keep top {top_n} significant (by frequency) categories and replace insignificant with '{insig_map_to}': {feat}",
+            verbose=verbose
+        )
+        self.top_n = top_n
+        self.insig_map_to = insig_map_to
+        
+    def replace_insig_categories(self, X):
+        _result = analyze_distributions__top_n(
+            X, 
+            '', 
+            self.feat, 
+            top_n=self.top_n, 
+            suppress_output=True
+        )
+        replace_insig_categories_rules = []
+        for insig_cat_val in _result[self.top_n]['insig'][0]:
+            replace_insig_categories_rules.append({
+                'missing_values': insig_cat_val,
+                'strategy': 'constant',
+                'fill_value': self.insig_map_to
+            })
+        replace_insig_categories_rules = {self.feat: replace_insig_categories_rules}
+        svt_insig_categories = SimpleValueTransformer(replace_insig_categories_rules)
+        return svt_insig_categories.fit_transform(X)
+    
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: self.replace_insig_categories(X), validate=False)
+    
+    
+    
 class CCompositeStrategyTransformer():
     def __init__(self, description, feat_transformer_sequence, pipeline_data_preprocessor=None, verbose=False):
         self.description = description
@@ -477,7 +512,7 @@ def _html_prettify_strategy_transformer_description(strategy_transformer):
         s_html += "</ol>"
         return s_html
     else:
-        return f"<b>strategy description</b>: <i><big><font color='blue'>{strategy_transformer.description}</font></big></i>"
+        return f"<b>strategy description</b>: <i><font color='blue' style='font-size: x-large;'>{strategy_transformer.description}</font></i>"
 
 def html_prettify_strategy_transformer_description(strategy_transformer):
     display(HTML(_html_prettify_strategy_transformer_description(strategy_transformer)))
@@ -675,6 +710,16 @@ class C__tfidf_kmeans_classify__funder__StrategyTransformer(C__tfidf_kmeans_clas
             pipeline_data_preprocessor, 
             verbose=verbose
         )
+        
+class C__top_n_significance__funder__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__funder__StrategyTransformer, self).__init__(
+            'funder',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='none',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
 # ************* StrategyTransformers specific to funder: END *************
 
 
@@ -737,6 +782,17 @@ class C__tfidf_kmeans_classify__installer__StrategyTransformer(C__tfidf_kmeans_c
             pipeline_data_preprocessor, 
             verbose=verbose
         )
+        
+class C__top_n_significance__installer__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__installer__StrategyTransformer, self).__init__(
+            'installer',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+    
 # ************* StrategyTransformers specific to installer: END *************
 
 
@@ -895,6 +951,16 @@ class C__tfidf_kmeans_classify__scheme_name__StrategyTransformer(C__tfidf_kmeans
             pipeline_data_preprocessor, 
             verbose=verbose
         )
+        
+class C__top_n_significance__scheme_name__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
 # ************* StrategyTransformers specific to scheme_name: END *************
 # ************* StrategyTransformers specific to wpt_operator: BEGIN *************
 
@@ -920,3 +986,27 @@ class C__required_proprocessing__permit__StrategyTransformer(CCompositeStrategyT
             verbose=verbose
         )
 # ************* StrategyTransformers specific to public_meeting: END *************
+
+
+
+# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
+# ************* StrategyTransformers specific to ward: BEGIN *************
+class C__tfidf_normalize__ward__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_normalize__ward__StrategyTransformer, self).__init__(
+            'ward', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__top_n_significance__ward__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__ward__StrategyTransformer, self).__init__(
+            'ward',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to ward: BEGIN *************
+# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
