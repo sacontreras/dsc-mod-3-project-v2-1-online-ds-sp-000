@@ -302,7 +302,7 @@
             "gamma": 0,
             "learning_rate": 0.1,
             "max_depth": 15,
-            "min_child_weight": 4,
+            "min_child_weight": 1,
             "n_estimators": 375,
             "n_jobs": -1,
             "random_state": 42,

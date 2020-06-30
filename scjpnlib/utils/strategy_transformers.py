@@ -202,7 +202,8 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             self.feat, 
             X, 
             self.y_encoded, 
-            post_encode_null_to_global_mean=self.post_encode_null_to_global_mean
+            post_encode_null_to_global_mean=self.post_encode_null_to_global_mean,
+            verbose=self.verbose
         )
         return FunctionTransformer(
             lambda X: target_encoder_transform(
@@ -489,7 +490,7 @@ class BadCtorSignature(Exception):
     def __init__(self, class_name):
         self.message = f"class {class_name} ctor does not match required signature: self, feat, pipeline_data_preprocessor, verbose"
 
-def instantiate_strategy_transformer(strategy_composition, description, pipeline):
+def instantiate_strategy_transformer(strategy_composition, description, pipeline, verbose=False):
     feat_transformer_sequence = []
     for strategy_component in strategy_composition:
         StratTransformerClass = strategy_transformer_name_to_class(strategy_component[1])
@@ -501,7 +502,7 @@ def instantiate_strategy_transformer(strategy_composition, description, pipeline
 
         feat_transformer_sequence.append((strategy_component[0], StratTransformerClass))
 
-    return CCompositeStrategyTransformer(description, feat_transformer_sequence, pipeline, verbose=True)
+    return CCompositeStrategyTransformer(description, feat_transformer_sequence, pipeline, verbose=verbose)
 
 def _html_prettify_strategy_transformer_description(strategy_transformer):
     if isinstance(strategy_transformer, CCompositeStrategyTransformer):
@@ -1011,6 +1012,14 @@ class C__top_n_significance__ward__StrategyTransformer(C__top_n_significance__St
 # ************* StrategyTransformers specific to ward: BEGIN *************
 
 # ************* StrategyTransformers specific to subvillage: BEGIN *************
+class C__impute_lcase__subvillage__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__subvillage__StrategyTransformer, self).__init__(
+            'subvillage', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
 class C__missing_value_imputer__subvillage__StrategyTransformer(C__value_replacement__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
         super(C__missing_value_imputer__subvillage__StrategyTransformer, self).__init__(
@@ -1025,8 +1034,19 @@ class C__required_proprocessing__subvillage__StrategyTransformer(CCompositeStrat
         super(C__required_proprocessing__subvillage__StrategyTransformer, self).__init__(
             description="required preprocessing for subvillage", 
             feat_transformer_sequence=[
-                ['subvillage', C__missing_value_imputer__subvillage__StrategyTransformer]
+                ['subvillage', C__missing_value_imputer__subvillage__StrategyTransformer],
+                ['subvillage', C__impute_lcase__subvillage__StrategyTransformer]
             ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__top_n_significance__subvillage__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__subvillage__StrategyTransformer, self).__init__(
+            'subvillage',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )

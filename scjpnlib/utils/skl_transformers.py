@@ -350,7 +350,7 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
     """Leave-one-out target encoder.
     """
     
-    def __init__(self, n_splits=3, shuffle=True, cols=None, post_encode_null_to_global_mean=True, debug=False):
+    def __init__(self, n_splits=3, shuffle=True, cols=None, post_encode_null_to_global_mean=True, verbose=False):
         """Leave-one-out target encoding for categorical features.
         
         Parameters
@@ -359,7 +359,7 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
             Columns to target encode.
         """
         self.cols = cols
-        self.debug = debug
+        self.verbose = verbose
         self.post_encode_null_to_global_mean = post_encode_null_to_global_mean
         
 
@@ -409,7 +409,8 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
         # S.C.: add global mean
         self.target_global_mean = y.mean()
 
-        print(f"** TargetEncoderLOOTransformer FIT INFO **: transformer has been fit to X")
+        if self.verbose:
+            print(f"** TargetEncoderLOOTransformer FIT INFO **: transformer has been fit to X")
             
         # Return the fit object
         return self
@@ -440,7 +441,8 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
 
         # Use normal target encoding if this is test data
         if y is None:
-            print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: NOT using Leave-One-Out")
+            if self.verbose:
+                print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: NOT using Leave-One-Out")
             
             for col in self.sum_count:
                 # S.C.: added to track null index after target encoding for this col
@@ -452,15 +454,16 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
                 self.transform_unique_cats[col] = unique_cats
                 unfit_cats = sorted(list(set(unique_cats) - set(self.sum_count[col].keys())))
                 self.transform_unfit_cats[col] = unfit_cats
-                if len(unfit_cats) > 0:
-                    print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
-                else:
-                    print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
+                if self.verbose:
+                    if  len(unfit_cats) > 0:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
+                    else:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
                 
                 for cat, sum_count in self.sum_count[col].items():
                     col_cat_mask = X[col]==cat
                     
-                    if self.debug and sum_count[1] == 0:
+                    if self.verbose and sum_count[1] == 0:
                         print(f"** TargetEncoderLOOTransformer TRANSFORM DEBUG **: sum_count[1]==0 for category '{cat}'")
                     
                     vals[col_cat_mask] = sum_count[0]/sum_count[1]
@@ -472,15 +475,17 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
                 n_null = len(Xo[null_mask])
                 if n_null > 0:
                     self.transform_null_index[col] = Xo[null_mask].index
-                    s_warning = f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: feat '{col}' has {n_null} nan values after target encoding"
-                    s_warning += f"; replacing these with last fit target global mean: {self.target_global_mean}" if self.post_encode_null_to_global_mean else " but post_encode_null_to_global_mean is False"
-                    print(s_warning)
+                    if self.verbose:
+                        s_warning = f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: feat '{col}' has {n_null} nan values after target encoding"
+                        s_warning += f"; replacing these with last fit target global mean: {self.target_global_mean}" if self.post_encode_null_to_global_mean else " but post_encode_null_to_global_mean is False"
+                        print(s_warning)
                     if self.post_encode_null_to_global_mean:
                         Xo[col].fillna(self.target_global_mean, inplace=True)
 
         # LOO target encode each column
         else:
-            print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: using Leave-One-Out")
+            if self.verbose:
+                print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: using Leave-One-Out")
             
             _classes = y.unique()
             
@@ -494,16 +499,17 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
                 self.transform_unique_cats[col] = unique_cats
                 unfit_cats = sorted(list(set(unique_cats) - set(self.sum_count[col].keys())))
                 self.transform_unfit_cats[col] = unfit_cats
-                if len(unfit_cats) > 0:
-                    print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
-                else:
-                    print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
+                if self.verbose:
+                    if len(unfit_cats) > 0:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM WARNING!! **: {len(unfit_cats)} categories of '{col}' occur in X (out of {len(unique_cats)} unique) that do not exist in the set of fit categories - modeled accuracy on X will drop as a result")
+                    else:
+                        print(f"** TargetEncoderLOOTransformer TRANSFORM INFO **: unique categories of '{col}' in X match those that were previously fit")
                 
                 for cat, sum_count in self.sum_count[col].items():
                     col_cat_mask = X[col]==cat
                     
                     # for debug only
-                    if self.debug and sum_count[1] == 1:
+                    if self.verbose and sum_count[1] == 1:
                         print(f"** TargetEncoderLOOTransformer TRANSFORM DEBUG **: for col '{col}', category '{cat}', sum_count[1] == 1")
                         for _class in _classes:
                             col_cat_class_mask = y[(col_cat_mask)]==_class
@@ -544,8 +550,8 @@ class TargetEncoderLOOTransformer(TargetEncoderTransformer):
         return self.fit(X, y).transform(X, y)
 
 # helper functions
-def fit_target_encoder(feat, X, y_target_label_encoded, post_encode_null_to_global_mean=True):
-    target_encoder = TargetEncoderLOOTransformer(cols=[feat], post_encode_null_to_global_mean=post_encode_null_to_global_mean)
+def fit_target_encoder(feat, X, y_target_label_encoded, post_encode_null_to_global_mean=True, verbose=False):
+    target_encoder = TargetEncoderLOOTransformer(cols=[feat], post_encode_null_to_global_mean=post_encode_null_to_global_mean, verbose=verbose)
     return target_encoder.fit(X, y_target_label_encoded)
 
 def target_encoder_transform(target_encoder, feat, X, y_target_label_encoded=None):
@@ -553,7 +559,8 @@ def target_encoder_transform(target_encoder, feat, X, y_target_label_encoded=Non
     feat_target_encoded = f"{feat}_target_encoded"
     X_feat_encoded[feat_target_encoded] = X_feat_encoded[feat]
     X_feat_encoded[feat] = X[feat]
-    print(f"added new feature: {feat_target_encoded}")
+    if target_encoder.verbose:
+        print(f"added new feature: {feat_target_encoded}")
     return X_feat_encoded
 
 

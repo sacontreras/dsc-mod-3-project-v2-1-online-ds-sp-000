@@ -577,6 +577,12 @@
                     [
                         ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
                         ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    [
+                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
+                        ["subvillage", "C__top_n_significance__subvillage__StrategyTransformer"],
+                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
                     ]
                 ]
             }
