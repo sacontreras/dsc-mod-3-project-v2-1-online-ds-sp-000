@@ -1009,4 +1009,26 @@ class C__top_n_significance__ward__StrategyTransformer(C__top_n_significance__St
             verbose=verbose
         )
 # ************* StrategyTransformers specific to ward: BEGIN *************
+
+# ************* StrategyTransformers specific to subvillage: BEGIN *************
+class C__missing_value_imputer__subvillage__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__subvillage__StrategyTransformer, self).__init__(
+            'subvillage', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': 'unknown'}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__required_proprocessing__subvillage__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__subvillage__StrategyTransformer, self).__init__(
+            description="required preprocessing for subvillage", 
+            feat_transformer_sequence=[
+                ['subvillage', C__missing_value_imputer__subvillage__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to subvillage: BEGIN *************
 # ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
