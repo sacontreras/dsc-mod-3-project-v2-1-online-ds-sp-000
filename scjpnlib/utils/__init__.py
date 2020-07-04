@@ -443,6 +443,11 @@ def impute_TO_nan(df, feat, val_to_replace_with_nan):
     df_feat_val_as_nan[feat] = df_feat_val_as_nan[feat].replace(val_to_replace_with_nan, np.NaN)
     return df_feat_val_as_nan
 
+def find_and_impute(df, feat, to_replace=r"[^a-zA-Z0-9]", replace_with_val=""):
+    df_copy = df.copy()
+    df_copy[feat] = df_copy[feat].replace(to_replace=to_replace, value=replace_with_val, regex=True)
+    return df_copy
+
 def impute_TO_lcase(df, feat):
     #exclude nulls since this may not have been done yet
     df_nulls_excluded = df[df[feat].isnull()==False]
@@ -811,6 +816,7 @@ def analyze_distributions(
 
         if (percentile != 100 or not suppress_100th_percentile_display) and not suppress_output:
             plt.bar(d_pop_rep_labels, d_pop_rep, width=width, color=colors)
+
             # top label for grouping of significant (based on percentile)
             ax.text(
                 (rects[-2].get_x()-rects[0].get_x())/2, 
@@ -823,7 +829,10 @@ def analyze_distributions(
             if len(many_categories_val_count_top_percent) < n_all_unique:
                 ax.text(
                     rects[-1].get_x()+rects[-1].get_width()/2, 
-                    d_pop_rep[-1]+bar_label_voffset,
+
+                    # d_pop_rep[-1]+bar_label_voffset,
+                    rects[-1].get_y()+rects[-1].get_height()+bar_label_voffset,
+
                     f"{round(d_pop_rep[-1]*100,4)}% ({len(df)-pop_rep_count} observations)",
                     ha='center', 
                     rotation=90,
@@ -835,7 +844,9 @@ def analyze_distributions(
             for i_r_d, (rect, d) in enumerate(zip(rects, densities)):
                 ax.text(
                     rect.get_x()+rect.get_width()/2, 
+
                     d+bar_label_voffset,
+
                     f"{round(d*100,4)}% ({counts[i_r_d]} observations)",
                     ha='center', 
                     rotation=90,
@@ -975,7 +986,10 @@ def analyze_distributions__top_n(
         if len(many_categories_val_count_top_n) < n_all_unique:
             ax.text(
                 rects[-1].get_x()+rects[-1].get_width()/2, 
-                d_pop_rep[-1]+bar_label_voffset,
+
+                # d_pop_rep[-1]+bar_label_voffset,
+                rects[-1].get_y()+rects[-1].get_height()+bar_label_voffset,
+
                 f"{round(d_pop_rep[-1]*100,4)}% ({len(df)-pop_rep_count} observations)",
                 ha='center', 
                 rotation=90,
@@ -983,11 +997,14 @@ def analyze_distributions__top_n(
             )
 
         plt.bar(labels, densities, width=width, color='blue')
+
         # annotation for significant (based on percentile)
         for i_r_d, (rect, d) in enumerate(zip(rects, densities)):
             ax.text(
                 rect.get_x()+rect.get_width()/2, 
+
                 d+bar_label_voffset,
+                
                 f"{round(d*100,4)}% ({counts[i_r_d]} observations)",
                 ha='center', 
                 rotation=90,
@@ -1221,7 +1238,8 @@ def get_preprocessing_options_fname(eda_cfg, preprocessing_options_cfg, data_kwa
     return f"preprocessing-options-{digest_str}.json", "preprocessing-spec-last.json"
 
 
-def find_weird_vals(df, df_name, regx_weird_val=r"\b[^a-zA-Z]+\b", suppress_output=False):
+# def find_weird_vals(df, df_name, regx_weird_val=r"\b[^a-zA-Z]+\b", suppress_output=False):
+def find_weird_vals(df, df_name, regx_weird_val=r"( )*[^a-zA-Z]+( )*", suppress_output=False):
     df_values_analysis, _ = analyze_values(df, df_name, standard_options_kargs={'sort_unique_vals':True,'hide_cols':True}, suppress_output=True)
     df_analysis_object_feats = df_values_analysis.loc[df_values_analysis['dtype']==object]
     weird_vals_map = {}

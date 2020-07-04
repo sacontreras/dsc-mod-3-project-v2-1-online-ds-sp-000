@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 
 class DropColumnsTransformer(object) :
-    def __init__(self, columns_to_drop, error_on_non_existent_col=False):
+    def __init__(self, columns_to_drop, error_on_non_existent_col=True):
         self.columns_to_drop = columns_to_drop
         self.error_on_non_existent_col = error_on_non_existent_col
         self.prior_columns = None
@@ -28,7 +28,9 @@ class DropColumnsTransformer(object) :
         if not self.error_on_non_existent_col: # get list of existing columns from those passed in
             self.columns_to_drop = self.__filter_columns(X)
         else:
-            X.drop(self.columns_to_drop, axis=1) # not in place; done for the sake of error_on_non_existent_col
+            for col in self.columns_to_drop:
+                if col not in X:
+                    raise ValueError('Column \''+col+'\' not in X')
         return self
 
     def transform(self, X):
@@ -61,6 +63,9 @@ class LambdaTransformer(object):
             self.replacement_rules_dict = self.__filter_columns(X)
         else:
             X.drop(self.replacement_rules_dict.keys(), axis=1) # not in place; done for the sake of error_on_non_existent_col
+            for col in self.replacement_rules_dict.keys():
+                if col not in X:
+                    raise ValueError('Column \''+col+'\' not in X')
         return self
 
     def transform(self, X):
@@ -76,7 +81,7 @@ class LambdaTransformer(object):
 
 
 class SimpleValueTransformer(object):
-    def __init__(self, replacement_rules_dict, error_on_non_existent_col=False, verbose=False):
+    def __init__(self, replacement_rules_dict, error_on_non_existent_col=True, verbose=False):
         self.replacement_rules_dict = replacement_rules_dict
         self.error_on_non_existent_col = error_on_non_existent_col
         self.verbose = verbose
@@ -96,7 +101,9 @@ class SimpleValueTransformer(object):
         if not self.error_on_non_existent_col: # remove non-existent columns from keys
             self.replacement_rules_dict = self.__filter_columns(X)
         else:
-            X.drop(self.replacement_rules_dict.keys(), axis=1) # not in place; done for the sake of error_on_non_existent_col
+            for col in self.replacement_rules_dict.keys():
+                if col not in X:
+                    raise ValueError('Column \''+col+'\' not in X')
         return self
 
     def transform(self, X):
@@ -144,12 +151,13 @@ class SimpleValueTransformer(object):
 
 
 class OneHotEncodingTransformer(object):
-    def __init__(self, cat_feats_to_encode, categories_by_feat_idx, error_on_non_existent_col=False):
+    def __init__(self, cat_feats_to_encode, categories_by_feat_idx, error_on_non_existent_col=True, verbose=False):
         self.cat_feats_to_encode = cat_feats_to_encode
         self.categories_by_feat_idx = categories_by_feat_idx
         self.ohe = None
         self.error_on_non_existent_col = error_on_non_existent_col
         self.encoded_columns = None
+        self.verbose = verbose
 
     def __filter_columns(self, df):
         cols = []
@@ -163,29 +171,35 @@ class OneHotEncodingTransformer(object):
         if not self.error_on_non_existent_col: # get list of existing columns from those passed in
             self.cat_feats_to_encode = self.__filter_columns(X)
         else:
-            X.drop(self.cat_feats_to_encode, axis=1) # not in place; done for the sake of error_on_non_existent_col
+            for col in self.cat_feats_to_encode:
+                if col not in X:
+                    raise ValueError('Column \''+col+'\' not in X')
         self.ohe = OneHotEncoder(categories=self.categories_by_feat_idx, drop='first', sparse=False)
         self.ohe.fit(X[self.cat_feats_to_encode])
+        self.encoded_columns = list(self.ohe.get_feature_names(self.cat_feats_to_encode))
         self.feats_not_encoded = list(X.columns)
         for cat_feat_to_encode in self.cat_feats_to_encode:
             self.feats_not_encoded.remove(cat_feat_to_encode)
+        # if self.verbose:
+        #     print(f"** OneHotEncodingTransformer FIT DEBUG **: cat_feats_to_encode: {self.cat_feats_to_encode if len(self.cat_feats_to_encode) < 100 else 'count = '+str(len(self.cat_feats_to_encode))}")
+        #     print(f"** OneHotEncodingTransformer FIT DEBUG **: encoded_columns: {self.encoded_columns if len(self.encoded_columns) < 100 else 'count = '+str(len(self.encoded_columns))}")
+        #     print(f"** OneHotEncodingTransformer FIT DEBUG **: feats_not_encoded: {self.feats_not_encoded if len(self.feats_not_encoded) < 100 else 'count = '+str(len(self.feats_not_encoded))}")
         return self
 
     def transform(self, X):
-        # X_after_encoding = pd.DataFrame(self.ohe.transform(X[self.cat_feats_to_encode]), columns=self.ohe.get_feature_names(self.cat_feats_to_encode), index=X.index)
         cols = self.feats_not_encoded.copy()
-        cols.extend(self.ohe.get_feature_names(self.cat_feats_to_encode))
+        cols.extend(self.encoded_columns)
         ohe_result = self.ohe.transform(X[self.cat_feats_to_encode])
         X_after_encoding = pd.concat(
             [
                 X[self.feats_not_encoded],
-                pd.DataFrame(ohe_result, columns=self.ohe.get_feature_names(self.cat_feats_to_encode), index=X.index)
+                pd.DataFrame(ohe_result, columns=self.encoded_columns, index=X.index)
             ], 
             axis=1,
             join='inner'
         )
+        # Note that obviously the original feat (that was one-hot encoded) is NOT in the transformed data set
         X_after_encoding.columns = cols
-        self.encoded_columns = self.cat_feats_to_encode
         return X_after_encoding
 
     def fit_transform(self, X, y=None): # nothing will be done to y
@@ -194,7 +208,7 @@ class OneHotEncodingTransformer(object):
 
 
 class LabelEncodingTransformer(object):
-    def __init__(self, cat_feats_to_encode, error_on_non_existent_col=False):
+    def __init__(self, cat_feats_to_encode, error_on_non_existent_col=True):
         self.cat_feats_to_encode = cat_feats_to_encode
         self.labelencoder = None
         self.error_on_non_existent_col = error_on_non_existent_col
@@ -212,7 +226,9 @@ class LabelEncodingTransformer(object):
         if not self.error_on_non_existent_col: # get list of existing columns from those passed in
             self.cat_feats_to_encode = self.__filter_columns(X)
         else:
-            X.drop(self.cat_feats_to_encode, axis=1) # not in place; done for the sake of error_on_non_existent_col
+            for col in self.cat_feats_to_encode:
+                if col not in X:
+                    raise ValueError('Column \''+col+'\' not in X')
         self.labelencoder = LabelEncoder()
         self.labelencoder.fit(X[self.cat_feats_to_encode].values.ravel())
         self.feats_not_encoded = list(X.columns)

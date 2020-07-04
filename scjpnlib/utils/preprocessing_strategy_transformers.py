@@ -1,13 +1,14 @@
 import importlib
 from abc import ABC, abstractmethod
-from . import impute_TO_nan, impute_TO_lcase, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type, analyze_distributions__top_n
+from . import impute_TO_nan, impute_TO_lcase, find_and_impute, analyze_outliers_detailed, convert_col_to_date_type, convert_col_type, analyze_distributions__top_n
 from sklearn.preprocessing import FunctionTransformer
-from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer
+from .skl_transformers import fit_target_encoder, target_encoder_transform, DropColumnsTransformer, SimpleValueTransformer, OneHotEncodingTransformer
 from .submodels import tfidf_fit, tfidf_transform, tfidf_kmeans_classify_feature__fit, tfidf_kmeans_classify_feature__transform
-from IPython.core.display import HTML, Markdown
+from IPython.core.display import display, HTML, Markdown
 import numpy as np
 import inspect
 import json
+import io
 
 
 
@@ -18,6 +19,7 @@ import json
 class CBaseStrategyTransformer():
     def __init__(self, feat, pipeline_data_preprocessor, description, verbose=False):
         self.feat = feat
+        self.transformed_feat_name = feat
         self.transformer = None
         self.pipeline_data_preprocessor = pipeline_data_preprocessor
         self.pipeline_step = None
@@ -28,8 +30,11 @@ class CBaseStrategyTransformer():
     def get_transformer(self, X, y=None): # fitting should occur in the override
         pass
 
-    def get_transformed_feat_name(self):
-        return self.feat
+    def _get_transformed_feat_name(self):
+        return self.transformed_feat_name
+
+    def _set_transformed_feat_name(self, transformed_feat_name):
+        self.transformed_feat_name = transformed_feat_name
 
     def _append_pipeline(self):
         if self.pipeline_data_preprocessor is not None:
@@ -81,10 +86,8 @@ class C__drop_it__StrategyTransformer(CBaseStrategyTransformer):
         )
 
     def get_transformer(self, X, y=None):
+        self._set_transformed_feat_name(None)
         return DropColumnsTransformer([self.feat])
-
-    def get_transformed_feat_name(self):
-        return None
 
 
 
@@ -103,6 +106,21 @@ class C__value_replacement__StrategyTransformer(CBaseStrategyTransformer):
         if self.verbose:
             print(f"strategy \"{self.description}\" replacement_rules:\n{json.dumps(self.replacement_rules, indent=4)}")
         return SimpleValueTransformer(self.replacement_rules)
+
+
+
+
+class C__strip_nonalphanumeric__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, pipeline_data_preprocessor, verbose=False):
+        super(C__strip_nonalphanumeric__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"strip non-alphanumeric: {feat}",
+            verbose=verbose
+        )
+
+    def get_transformer(self, X, y=None):
+        return FunctionTransformer(lambda X: find_and_impute(X, self.feat, to_replace=r"[^a-zA-Z0-9]", replace_with_val=""), validate=False)
 
 
 
@@ -205,6 +223,8 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             post_encode_null_to_global_mean=self.post_encode_null_to_global_mean,
             verbose=self.verbose
         )
+        self._set_transformed_feat_name(f"{self.feat}_target_encoded")
+
         return FunctionTransformer(
             lambda X: target_encoder_transform(
                 self.target_encoder,
@@ -213,9 +233,6 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
             ), 
             validate=False
         )
-
-    def get_transformed_feat_name(self):
-        return f"{self.feat}_target_encoded"
 
     def transform(self, X):
         if self.leave_one_out:
@@ -235,7 +252,7 @@ class C__target_encode__StrategyTransformer(CBaseStrategyTransformer):
         X_transformed = pipeline_step[1].transform(X_transformed) if pipeline_step is not None else dct_after_target_encode.fit_transform(X_transformed)
         if self.verbose:
             print(f"strategy \"{self.description}\" dropped feature '{self.feat}' after target encoding")
-            print(f"strategy transformation of feature '{self.feat}' to '{self.get_transformed_feat_name()}' is COMPLETE!")
+            print(f"strategy transformation of feature '{self.feat}' to '{self._get_transformed_feat_name()}' is COMPLETE!")
 
         return X_transformed
 
@@ -433,9 +450,32 @@ class C__top_n_significance__StrategyTransformer(CBaseStrategyTransformer):
     
     def get_transformer(self, X, y=None):
         return FunctionTransformer(lambda X: self.replace_insig_categories(X), validate=False)
+
+
+
+
+class C__OneHotEncode__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, override_categories=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__StrategyTransformer, self).__init__(
+            feat, 
+            pipeline_data_preprocessor, 
+            description=f"OneHot Encode: {feat}",
+            verbose=verbose
+        )
+        self.override_categories = override_categories
+
+    # do anything involving fit here since base fit() wraps it
+    def get_transformer(self, X, y=None):
+        if self.override_categories is None:
+            self.override_categories = sorted(list(X[self.feat].unique()))
+        transformer = OneHotEncodingTransformer(cat_feats_to_encode=[self.feat], categories_by_feat_idx=[self.override_categories], verbose=self.verbose)
+        transformer.fit(X)
+        self._set_transformed_feat_name(transformer.encoded_columns)
+        return transformer    
     
     
-    
+
+
 class CCompositeStrategyTransformer():
     def __init__(self, description, feat_transformer_sequence, pipeline_data_preprocessor=None, verbose=False):
         self.description = description
@@ -466,16 +506,21 @@ class CCompositeStrategyTransformer():
             X_transformed = feat_transformer.fit_transform(X_transformed, y)
         return X_transformed
 
-def colaesce_transformed_feat_names(transformer, lst, debug=False):
+def coalesce_transformed_feat_names(transformer, lst, debug=False):
     if not isinstance(transformer, CCompositeStrategyTransformer):
-        transformed_feat_name = transformer.get_transformed_feat_name()
+        transformed_feat_name = transformer._get_transformed_feat_name()
         if debug:
+            print(f"type(transformer._get_transformed_feat_name()): {type(transformed_feat_name)}")
             print(f"{transformer.__class__.__name__}: original feat: {transformer.feat}; transformed feat: {transformed_feat_name}")
         if transformed_feat_name is not None:
-            lst.append(transformed_feat_name)
+            if type(transformed_feat_name) is list or type(transformed_feat_name) is tuple:
+                for tfn in transformed_feat_name:
+                    lst.append(tfn)
+            else:
+                lst.append(transformed_feat_name)
     else:
         for contained_transformer in transformer.feat_transformer_sequence:
-            colaesce_transformed_feat_names(contained_transformer, lst, debug)
+            coalesce_transformed_feat_names(contained_transformer, lst, debug)
 
 
 
@@ -484,7 +529,7 @@ def colaesce_transformed_feat_names(transformer, lst, debug=False):
 # used for "reflection" instantation - i.e. instantiation via class name (string)
 #   this is integral to being able to dynamically switch to a different strategy via the config file
 def strategy_transformer_name_to_class(strategy_transformer_class_name):
-    return getattr(importlib.import_module("scjpnlib.utils.strategy_transformers"), strategy_transformer_class_name)
+    return getattr(importlib.import_module("scjpnlib.utils.preprocessing_strategy_transformers"), strategy_transformer_class_name)
 
 class BadCtorSignature(Exception):
     def __init__(self, class_name):
@@ -520,6 +565,48 @@ def html_prettify_strategy_transformer_description(strategy_transformer):
 
 # ******************* API for string (reflection) based instantiation - used in conjunction with invokinng strategies specified in config file: END *******************
 
+# ******************* Other (useful) APIs: BEGIN *******************
+def get_features_affected_by_transformation(X, composite_transformer, baseline_cols, cols_prior, inclusion_desc, suppress_output=False, debug=False):
+    # get list of cols transformed by this option
+    transformed_cols = []
+    coalesce_transformed_feat_names(composite_transformer, transformed_cols, debug)
+    transformed_cols = set(transformed_cols)
+    
+    # filter out any columns that were dropped
+    filtered_baseline_cols = sorted(list(filter(lambda feat_name: feat_name in list(X.columns), baseline_cols)))
+    if not suppress_output:
+        display(HTML(f"<h4>baseline features in X after this transformation:</h4>"))
+        display(HTML(f"<pre>{filtered_baseline_cols}</pre>"))
+    
+    # only include cols in filtered_transformed_feat_names not already in filtered_baseline_cols
+    cols_on_filtered_transformed_feat_names_not_in_filtered_baseline_cols = transformed_cols - set(filtered_baseline_cols)
+    prior_cols_transformed_not_in_filtered_baseline_cols = set(cols_prior) - set(filtered_baseline_cols)
+    # now we need to filter out the ones not in X
+    filtered_prior_cols = sorted(list(filter(lambda feat_name: feat_name in list(X.columns), prior_cols_transformed_not_in_filtered_baseline_cols)))
+    filtered_transformed_feat_names = sorted(list(filter(lambda feat_name: feat_name in cols_on_filtered_transformed_feat_names_not_in_filtered_baseline_cols, transformed_cols)))
+    filtered_transformed_feat_names = sorted(list(filter(lambda feat_name: feat_name in list(X.columns), filtered_transformed_feat_names)))
+    filtered_transformed_feat_names = filtered_prior_cols + filtered_transformed_feat_names
+    if not suppress_output:
+        display(HTML(f"<h4>features (not in baseline) in X after transformation (including best priors):</h4>"))
+        display(HTML(f"<pre>{filtered_transformed_feat_names}</pre>"))
+    
+    baseline_plus_transformed_cols = filtered_baseline_cols
+    if len(filtered_transformed_feat_names) > 0:
+        baseline_plus_transformed_cols.extend(filtered_transformed_feat_names)
+        
+    if not suppress_output:
+        display(HTML(f"<h4>features {inclusion_desc} model:</h4>"))
+        buffer = io.StringIO()
+        X[baseline_plus_transformed_cols].info(buf=buffer)
+        s_info = buffer.getvalue()
+        display(HTML(f"<pre>{s_info}</pre>"))
+
+    return baseline_plus_transformed_cols
+# ******************* Other (useful) APIs: END *******************
+
+
+
+
 
 
 
@@ -529,6 +616,44 @@ def html_prettify_strategy_transformer_description(strategy_transformer):
 
 
 # Below are strategy transformers that are specific to features
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
+class C__strip_nonalphanumeric__extraction_type__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__extraction_type__StrategyTransformer, self).__init__(
+            'extraction_type', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__extraction_type__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
+            'extraction_type', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__extraction_type__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode extraction_type", 
+            feat_transformer_sequence=[
+                ['extraction_type', C__strip_nonalphanumeric__extraction_type__StrategyTransformer],
+                ['extraction_type', _C__OneHotEncode__extraction_type__StrategyTransformer] 
+                # note that since _C__OneHotEncode__extraction_type__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: END *************
+
+
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
+
 
 # ************* StrategyTransformers specific to pump_age (and construction_year, date_recorded): BEGIN *************
 class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
@@ -618,7 +743,7 @@ class C__create_pump_age_feature_from_date_recorded_and_construction_year__Strat
         super(C__create_pump_age_feature_from_date_recorded_and_construction_year__StrategyTransformer, self).__init__(
             'pump_age', 
             pipeline_data_preprocessor, 
-            description=f"create feature from date_recorded and construction_year: pump_age",
+            description=f"CREATE NEW FEATURE from date_recorded and construction_year: pump_age",
             verbose=verbose
         )
 
@@ -711,6 +836,14 @@ class C__tfidf_kmeans_classify__funder__StrategyTransformer(C__tfidf_kmeans_clas
             pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+class C__strip_nonalphanumeric__funder__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__funder__StrategyTransformer, self).__init__(
+            'funder', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
         
 class C__top_n_significance__funder__StrategyTransformer(C__top_n_significance__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -783,6 +916,14 @@ class C__tfidf_kmeans_classify__installer__StrategyTransformer(C__tfidf_kmeans_c
             pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+class C__strip_nonalphanumeric__installer__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__installer__StrategyTransformer, self).__init__(
+            'installer', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
         
 class C__top_n_significance__installer__StrategyTransformer(C__top_n_significance__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -807,10 +948,10 @@ class C__weird_literal_value_replacement__latitude__StrategyTransformer(C__value
             verbose=verbose
         )
 
-class C__required_proprocessing__gps_coordinates__StrategyTransformer(CCompositeStrategyTransformer):
+class C__required_proprocessing__latitude__StrategyTransformer(CCompositeStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__required_proprocessing__gps_coordinates__StrategyTransformer, self).__init__(
-            description="required preprocessing for gps_coordinates", 
+        super(C__required_proprocessing__latitude__StrategyTransformer, self).__init__(
+            description="required preprocessing for latitude", 
             feat_transformer_sequence=[
                 ['latitude', C__weird_literal_value_replacement__latitude__StrategyTransformer]
             ],
@@ -839,6 +980,18 @@ class C__required_proprocessing__basin__StrategyTransformer(CCompositeStrategyTr
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+# C__required_proprocessing__basin__StrategyTransformer must be done first
+class C__OneHotEncode__basin__StrategyTransformer(CBaseStrategyTransformer):
+    def __init__(self, feat, override_categories=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__StrategyTransformer, self).__init__(
+            'basin', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            description=f"OneHot Encode: {feat}",
+            verbose=verbose
+        )
+        self.override_categories = override_categories
 # ************* StrategyTransformers specific to gps_coordinates: END *************
 
 

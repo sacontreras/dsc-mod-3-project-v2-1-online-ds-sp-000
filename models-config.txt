@@ -303,9 +303,122 @@
             "learning_rate": 0.1,
             "max_depth": 15,
             "min_child_weight": 1,
-            "n_estimators": 375,
-            "n_jobs": -1,
-            "random_state": 42,
-            "verbosity": 1}
+            "n_estimators": 375
         }
+    },
+    
+    "Catboost": {
+        "run": true,
+
+        "trials": {
+            "run": false,
+            
+            "array": [
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 6 is default
+                            "max_depth": [6, 10, 16]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 1000 is default
+                            "n_estimators": [100, 500, 1000]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // "Logloss" is default but we obviously want a variant of multiclass
+                            "loss_function: ["MultiClass", "MultiClassOneVsAll"]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // "SymmetricTree" is default
+                            "grow_policy": ["SymmetricTree", "Depthwise", "Lossguide"]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 1 is default
+                            "min_data_in_leaf": [1, 2, 5]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 31 is default
+                            "max_leaves": [15, 23, 31]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // "Min" is default
+                            "nan_mode": ["Min", "Max"]
+                        },
+
+                        "last_best": {}
+                    }
+                }
+            ]
+        }
+    },
+    
+    "SVM": {
+        "run": true,
+
+        "trials": {
+            "run": false,
+            
+            "array": []
+        }
+        
+        "params": {
+        
+        }
+    }
 }

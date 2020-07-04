@@ -31,6 +31,287 @@
 
 
     "feature_groupings": {
+
+        "amount_tsh__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Total static head (amount water available to waterpoint)'"
+            },
+
+            "features": ["amount_tsh"],
+
+            "preprocessing_options": {
+                // amount_tsh is numeric, so options are as follows:
+                "amount_tsh": [
+                    [["amount_tsh", "C__drop_it__StrategyTransformer"]],
+                    
+                    [["amount_tsh", "C__leave_it_as_is__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["amount_tsh", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //treat as continuous
+                    [["amount_tsh", "C__replace_outliers_with_mean__StrategyTransformer"]],
+                    [["amount_tsh", "C__replace_outliers_with_median__StrategyTransformer"]],
+                    [["amount_tsh", "C__replace_0_with_nan__StrategyTransformer"]]
+                ]
+            }
+        },
+
+        "pump_age_at_observation_date__group": {
+            "description": {
+                "type": "engineered",
+                "description": "'The date the row was entered' - 'Year the waterpoint was constructed'"
+            },
+
+            "features": ["date_recorded", "construction_year"],
+
+            "preprocessing_options": {
+                // pump_age is a NEW/engineered feature, so there is only one option (which is done in required preprocessing) (we can NOT create it, which would mean leaving date_recorded and construction_year as is):
+                "pump_age": [
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__drop_it__StrategyTransformer"]    
+                    ],
+                    
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__leave_it_as_is__StrategyTransformer"] // construction_year starts as an int so we CAN use it as is
+                    ],
+                    [   // the idea here is to only use construction_year but with results from EDA applied to it
+                        ["date_recorded", "C__required_proprocessing__date_recorded__StrategyTransformer"], // this should probably be part of C__required_proprocessing__construction_year__StrategyTransformer as it is required for C__required_proprocessing__construction_year__StrategyTransformer
+                        ["construction_year", "C__required_proprocessing__construction_year__StrategyTransformer"], // construction_year starts as an int, this converts it to datetime type and replaces some weird values
+                        ["construction_year", "C__convert_to_int__construction_year__StrategyTransformer"],
+                        ["date_recorded", "C__drop_it__StrategyTransformer"] // need to do this after required preprocessing for construction_year since it uses date_recorded
+                    ],
+                    
+                    //treat construction_year as categorical
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    //treat construction_year as continuous
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__replace_outliers_with_mean__StrategyTransformer"]
+                    ],
+                    [
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__replace_outliers_with_median__StrategyTransformer"]
+                    ],
+                    [  
+                        ["date_recorded", "C__drop_it__StrategyTransformer"],
+                        ["construction_year", "C__replace_0_with_nan__StrategyTransformer"]
+                    ],
+                    
+                    //OTHERWISE... actually create the new pump_age feature
+                    [
+                        ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "funder__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Who funded the well'"
+            },
+
+            "features": ["funder"],
+
+            "preprocessing_options": {
+                // funder is categorical-string, so leaving it as is is not an option
+                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
+                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
+                //      options are as follows:
+                "funder": [
+                    [
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__strip_nonalphanumeric__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_normalize__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //KMeans classification (clusters) on top of NLP TFIDF normalization - if TFIDF improves accuracy then uncomment this to try it
+                    /*
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__strip_nonalphanumeric__funder__StrategyTransformer"],
+                        ["funder", "C__top_n_significance__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "gps_height__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Altitude of the well'"
+            },
+
+            "features": ["gps_height"],
+
+            "preprocessing_options": {
+                "gps_height": [
+                    [["gps_height", "C__drop_it__StrategyTransformer"]],
+                    
+                    [["gps_height", "C__leave_it_as_is__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["gps_height", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //if we treat as continuous
+                    [["gps_height", "C__replace_outliers_with_mean__StrategyTransformer"]],
+                    [["gps_height", "C__replace_outliers_with_median__StrategyTransformer"]],
+                    [["gps_height", "C__replace_0_with_nan__StrategyTransformer"]]
+                ]
+            }
+        },
+
+        "installer__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Organization that installed the well'"
+            },
+
+            "features": ["installer"],
+
+            "preprocessing_options": {
+                // installer is categorical-string, so leaving it as is is not an option; options are as follows:
+                "installer": [
+                    [
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding - but some preprocessing is required beforehand since there are nulls and weird values
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__strip_nonalphanumeric__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_normalize__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //KMeans classification (clusters) on top of NLP TFIDF normalization - uncomment if TFIDF increases accuracy but leave commented out otherwise since it takes a long time
+                    /*
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ]
+                    */
+                    
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__strip_nonalphanumeric__installer__StrategyTransformer"],
+                        ["installer", "C__top_n_significance__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "gps_coordinates__group": {
+            "description": {
+                "type": "provided",
+                "description": "('GPS coordinate' (latitude), 'GPS coordinate' (longitude))"
+            },
+
+            "features": ["latitude", "longitude"],
+
+            "preprocessing_options": {
+                //note that these constitute an ordered-pair (of continuous values), so if we drop one we must drop the other
+                //  the same holds for scaling if we do it
+                //"weird" values (but not outliers) can be handled individually in each
+                //NO outlier processing!
+
+                "latitude": [
+                    [["latitude", "C__drop_it__StrategyTransformer"]],
+
+                    [["latitude", "C__leave_it_as_is__StrategyTransformer"]],
+
+                    [
+                        ["latitude", "C__required_proprocessing__latitude__StrategyTransformer"], //replaces weird values
+                        ["latitude", "C__leave_it_as_is__StrategyTransformer"]
+                    ]
+                ],
+
+                "longitude": [
+                    [["longitude", "C__drop_it__StrategyTransformer"]],
+
+                    [["longitude", "C__leave_it_as_is__StrategyTransformer"]] 
+                ]
+            }
+        },
+
+        "wpt_name__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Name of the waterpoint if there is one'"
+            },
+
+            "features": ["wpt_name"],
+
+            "preprocessing_options": {
+                // wpt_name is categorical-string, so leaving it as is is not an option; it's an identifier so we will always drop it
+                "wpt_name": [[["wpt_name", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+
+
+
+
+
+        "payment_frequency_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
+            },
+
+            "features": ["payment", "payment_type"],
+
+            "preprocessing_options": {
+                // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                "payment_type": [
+                    [["payment_type", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
+                ],
+
+                "payment": [[["payment", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
         "wpt_extraction_type_class__group": {
             "description": {
                 "type": "provided",
@@ -57,32 +338,6 @@
                 "extraction_type_group": [[["extraction_type_group", "C__drop_it__StrategyTransformer"]]],
 
                 "extraction_type_class": [[["extraction_type_class", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "amount_tsh__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Total static head (amount water available to waterpoint)'"
-            },
-
-            "features": ["amount_tsh"],
-
-            "preprocessing_options": {
-                // amount_tsh is numeric, so options are as follows:
-                "amount_tsh": [
-                    [["amount_tsh", "C__drop_it__StrategyTransformer"]],
-                    
-                    [["amount_tsh", "C__leave_it_as_is__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["amount_tsh", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
-                    
-                    //treat as continuous
-                    [["amount_tsh", "C__replace_outliers_with_mean__StrategyTransformer"]],
-                    [["amount_tsh", "C__replace_outliers_with_median__StrategyTransformer"]],
-                    [["amount_tsh", "C__replace_0_with_nan__StrategyTransformer"]]
-                ]
             }
         },
         
@@ -154,86 +409,6 @@
             }
         },
         
-        "gps_height__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Altitude of the well'"
-            },
-
-            "features": ["gps_height"],
-
-            "preprocessing_options": {
-                "gps_height": [
-                    [["gps_height", "C__drop_it__StrategyTransformer"]],
-                    
-                    [["gps_height", "C__leave_it_as_is__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["gps_height", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
-                    
-                    //if we treat as continuous
-                    [["gps_height", "C__replace_outliers_with_mean__StrategyTransformer"]],
-                    [["gps_height", "C__replace_outliers_with_median__StrategyTransformer"]],
-                    [["gps_height", "C__replace_0_with_nan__StrategyTransformer"]]
-                ]
-            }
-        },
-        
-        "gps_coordinates__group": {
-            "description": {
-                "type": "provided",
-                "description": "('GPS coordinate' (latitude), 'GPS coordinate' (longitude))"
-            },
-
-            "features": ["latitude", "longitude"],
-
-            "preprocessing_options": {
-                //note that these constitute an ordered-pair (of continuous values), so if we drop one we must drop the other
-                //  the same holds for scaling if we do it
-                //"weird" values (but not outliers) can be handled individually in each
-                //NO outlier processing!
-                "gps_coordinates": [
-                    [// 0x00
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x11
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    // if for some reason one may contribute to the model and not the other??
-                    [// 0x01
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    // if for some reason one may contribute to the model and not the other??
-                    [// 0x10
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [//0x02
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"], //replaces weird values - should probably go by another name
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    [//0x20
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"], //replaces weird values - should probably go by another name
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x22
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"] //replaces weird values
-                    ]
-                ]
-            }
-        },
-        
         "wpt_type_class__group": {
             "description": {
                 "type": "provided",
@@ -252,53 +427,6 @@
                 ],
 
                 "waterpoint_type_group": [[["waterpoint_type_group", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "installer__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Organization that installed the well'"
-            },
-
-            "features": ["installer"],
-
-            "preprocessing_options": {
-                // installer is categorical-string, so leaving it as is is not an option; options are as follows:
-                "installer": [
-                    [
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    //categorical target encoding - but some preprocessing is required beforehand since there are nulls and weird values
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_normalize__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    //KMeans classification (clusters) on top of NLP TFIDF normalization - uncomment if TFIDF increases accuracy but leave commented out otherwise since it takes a long time
-                    /*
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ]
-                    */
-                    
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__top_n_significance__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ]
             }
         },
         
@@ -703,82 +831,6 @@
             }
         },
         
-        "pump_age_at_observation_date__group": {
-            "description": {
-                "type": "engineered",
-                "description": "'The date the row was entered' - 'Year the waterpoint was constructed'"
-            },
-
-            "features": ["date_recorded", "construction_year"],
-
-            "preprocessing_options": {
-                // pump_age is a NEW/engineered feature, so there is only one option (which is done in required preprocessing) (we can NOT create it, which would mean leaving date_recorded and construction_year as is):
-                "pump_age": [
-                    [
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__drop_it__StrategyTransformer"]    
-                    ],
-                    
-                    [
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__leave_it_as_is__StrategyTransformer"] // construction_year starts as an int so we CAN use it as is
-                    ],
-                    [   // the idea here is to only use construction_year but with results from EDA applied to it
-                        ["date_recorded", "C__required_proprocessing__date_recorded__StrategyTransformer"], // this should probably be part of C__required_proprocessing__construction_year__StrategyTransformer as it is required for C__required_proprocessing__construction_year__StrategyTransformer
-                        ["construction_year", "C__required_proprocessing__construction_year__StrategyTransformer"], // construction_year starts as an int, this converts it to datetime type and replaces some weird values
-                        ["construction_year", "C__convert_to_int__construction_year__StrategyTransformer"],
-                        ["date_recorded", "C__drop_it__StrategyTransformer"] // need to do this after required preprocessing for construction_year since it uses date_recorded
-                    ],
-                    
-                    //treat construction_year as categorical
-                    [
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    //treat construction_year as continuous
-                    [
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__replace_outliers_with_mean__StrategyTransformer"]
-                    ],
-                    [
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__replace_outliers_with_median__StrategyTransformer"]
-                    ],
-                    [  
-                        ["date_recorded", "C__drop_it__StrategyTransformer"],
-                        ["construction_year", "C__replace_0_with_nan__StrategyTransformer"]
-                    ],
-                    
-                    //OTHERWISE... actually create the new pump_age feature
-                    [
-                        ["pump_age", "C__required_proprocessing__pump_age__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-        
-        "payment_frequency_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
-            },
-
-            "features": ["payment", "payment_type"],
-
-            "preprocessing_options": {
-                // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
-                "payment_type": [
-                    [["payment_type", "C__drop_it__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
-                ],
-
-                "payment": [[["payment", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
         "num_private__group": {
             "description": {
                 "type": "provided",
@@ -797,20 +849,6 @@
                     [["num_private", "C__replace_outliers_with_median__StrategyTransformer"]],
                     [["num_private", "C__replace_0_with_nan__StrategyTransformer"]]
                 ]
-            }
-        },
-        
-        "wpt_name__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Name of the waterpoint if there is one'"
-            },
-
-            "features": ["wpt_name"],
-
-            "preprocessing_options": {
-                // wpt_name is categorical-string, so leaving it as is is not an option; it's an identifier so we will always drop it
-                "wpt_name": [[["wpt_name", "C__drop_it__StrategyTransformer"]]]
             }
         },
         
@@ -908,56 +946,6 @@
                 ],
 
                 "management_group": [[["management_group", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-
-        "funder__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Who funded the well'"
-            },
-
-            "features": ["funder"],
-
-            "preprocessing_options": {
-                // funder is categorical-string, so leaving it as is is not an option
-                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
-                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
-                //      options are as follows:
-                "funder": [
-                    [
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    //categorical target encoding
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_normalize__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    //KMeans classification (clusters) on top of NLP TFIDF normalization
-                    /*
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__top_n_significance__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ]
             }
         }
     },
