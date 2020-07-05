@@ -616,45 +616,6 @@ def get_features_affected_by_transformation(X, composite_transformer, baseline_c
 
 
 # Below are strategy transformers that are specific to features
-# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
-class C__strip_nonalphanumeric__extraction_type__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__strip_nonalphanumeric__extraction_type__StrategyTransformer, self).__init__(
-            'extraction_type', 
-            pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-
-class _C__OneHotEncode__extraction_type__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(_C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
-            'extraction_type', 
-            override_categories=None,
-            pipeline_data_preprocessor=pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-
-class C__OneHotEncode__extraction_type__StrategyTransformer(CCompositeStrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
-            description="required preprocessing to OneHot-Encode extraction_type", 
-            feat_transformer_sequence=[
-                ['extraction_type', C__strip_nonalphanumeric__extraction_type__StrategyTransformer],
-                ['extraction_type', _C__OneHotEncode__extraction_type__StrategyTransformer] 
-                # note that since _C__OneHotEncode__extraction_type__StrategyTransformer wraps OneHotEncodingTransformer, 
-                #   the original feat that was encoded will obviously not be in the transformed data set;
-                #   therefore, there is no need to drop it after this
-            ],
-            pipeline_data_preprocessor=pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-# ************* StrategyTransformers specific to wpt_extraction_type_class__group: END *************
-
-
-# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
-# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
-
-
 # ************* StrategyTransformers specific to pump_age (and construction_year, date_recorded): BEGIN *************
 class C__convert_string_date_to_datetime__date_recorded__StrategyTransformer(C__convert_string_date_to_datetime__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
@@ -981,18 +942,220 @@ class C__required_proprocessing__basin__StrategyTransformer(CCompositeStrategyTr
             verbose=verbose
         )
 
-# C__required_proprocessing__basin__StrategyTransformer must be done first
-class C__OneHotEncode__basin__StrategyTransformer(CBaseStrategyTransformer):
-    def __init__(self, feat, override_categories=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__OneHotEncode__StrategyTransformer, self).__init__(
+class C__strip_nonalphanumeric__basin__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__basin__StrategyTransformer, self).__init__(
+            'basin', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__basin__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__basin__StrategyTransformer, self).__init__(
             'basin', 
             override_categories=None,
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
-            description=f"OneHot Encode: {feat}",
             verbose=verbose
         )
-        self.override_categories = override_categories
-# ************* StrategyTransformers specific to gps_coordinates: END *************
+
+class C__OneHotEncode__basin__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__basin__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode basin", 
+            feat_transformer_sequence=[
+                ['basin', C__strip_nonalphanumeric__basin__StrategyTransformer],
+                ['basin', _C__OneHotEncode__basin__StrategyTransformer] 
+                # note that since _C__OneHotEncode__basin__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to basin: END *************
+
+
+# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
+# ************* StrategyTransformers specific to region_code: BEGIN *************
+class _C__OneHotEncode__region_code__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__region_code__StrategyTransformer, self).__init__(
+            'region_code', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__region_code__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__region_code__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode region_code", 
+            feat_transformer_sequence=[
+                ['region_code', _C__OneHotEncode__region_code__StrategyTransformer] 
+                # note that since _C__OneHotEncode__region_code__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to region_code: BEGIN *************
+
+# ************* StrategyTransformers specific to district_code: BEGIN *************
+class _C__OneHotEncode__district_code__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__district_code__StrategyTransformer, self).__init__(
+            'district_code', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__district_code__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__district_code__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode district_code", 
+            feat_transformer_sequence=[
+                ['district_code', _C__OneHotEncode__district_code__StrategyTransformer] 
+                # note that since _C__OneHotEncode__district_code__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to district_code: BEGIN *************
+
+# ************* StrategyTransformers specific to region: BEGIN *************
+class C__strip_nonalphanumeric__region__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__region__StrategyTransformer, self).__init__(
+            'region', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__region__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__region__StrategyTransformer, self).__init__(
+            'region', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__region__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__region__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode basin", 
+            feat_transformer_sequence=[
+                ['region', C__strip_nonalphanumeric__region__StrategyTransformer],
+                ['region', _C__OneHotEncode__region__StrategyTransformer] 
+                # note that since _C__OneHotEncode__region__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to region: END *************
+
+# ************* StrategyTransformers specific to lga: lga *************
+class C__strip_nonalphanumeric__lga__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__lga__StrategyTransformer, self).__init__(
+            'lga', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__lga__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__lga__StrategyTransformer, self).__init__(
+            'lga', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__lga__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__lga__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode lga", 
+            feat_transformer_sequence=[
+                ['lga', C__strip_nonalphanumeric__lga__StrategyTransformer],
+                ['lga', _C__OneHotEncode__lga__StrategyTransformer] 
+                # note that since _C__OneHotEncode__region__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to lga: END *************
+
+# ************* StrategyTransformers specific to ward: BEGIN *************
+class C__tfidf_normalize__ward__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__tfidf_normalize__ward__StrategyTransformer, self).__init__(
+            'ward', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__top_n_significance__ward__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__ward__StrategyTransformer, self).__init__(
+            'ward',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to ward: END *************
+
+# ************* StrategyTransformers specific to subvillage: BEGIN *************
+class C__impute_lcase__subvillage__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__impute_lcase__subvillage__StrategyTransformer, self).__init__(
+            'subvillage', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__missing_value_imputer__subvillage__StrategyTransformer(C__value_replacement__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__missing_value_imputer__subvillage__StrategyTransformer, self).__init__(
+            'subvillage', 
+            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': 'unknown'}],
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__required_proprocessing__subvillage__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__required_proprocessing__subvillage__StrategyTransformer, self).__init__(
+            description="required preprocessing for subvillage", 
+            feat_transformer_sequence=[
+                ['subvillage', C__missing_value_imputer__subvillage__StrategyTransformer],
+                ['subvillage', C__impute_lcase__subvillage__StrategyTransformer]
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+        
+class C__top_n_significance__subvillage__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__top_n_significance__subvillage__StrategyTransformer, self).__init__(
+            'subvillage',
+            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
+            insig_map_to='other',
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to subvillage: BEGIN *************
+# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
 
 
 # ************* StrategyTransformers specific to public_meeting: BEGIN *************
@@ -1048,6 +1211,38 @@ class C__required_proprocessing__scheme_management__StrategyTransformer(CComposi
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
+
+class C__strip_nonalphanumeric__scheme_management__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__scheme_management__StrategyTransformer, self).__init__(
+            'scheme_management', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__scheme_management__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__scheme_management__StrategyTransformer, self).__init__(
+            'scheme_management', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__scheme_management__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__scheme_management__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode scheme_management", 
+            feat_transformer_sequence=[
+                ['scheme_management', C__strip_nonalphanumeric__scheme_management__StrategyTransformer],
+                ['scheme_management', _C__OneHotEncode__scheme_management__StrategyTransformer] 
+                # note that since _C__OneHotEncode__scheme_management__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
 # ************* StrategyTransformers specific to scheme_management: END *************
 
 # ************* StrategyTransformers specific to scheme_name: BEGIN *************
@@ -1087,6 +1282,14 @@ class C__required_proprocessing__scheme_name__StrategyTransformer(CCompositeStra
                 ['scheme_name', C__not_known_literal_value_replacement__scheme_name__StrategyTransformer]
             ],
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__strip_nonalphanumeric__scheme_name__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__scheme_name__StrategyTransformer, self).__init__(
+            'scheme_name', 
+            pipeline_data_preprocessor, 
             verbose=verbose
         )
         
@@ -1142,66 +1345,259 @@ class C__required_proprocessing__permit__StrategyTransformer(CCompositeStrategyT
 # ************* StrategyTransformers specific to public_meeting: END *************
 
 
-
-# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
-# ************* StrategyTransformers specific to ward: BEGIN *************
-class C__tfidf_normalize__ward__StrategyTransformer(C__tfidf_normalize__StrategyTransformer):
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: BEGIN *************
+# ************* StrategyTransformers specific to extraction_type: BEGIN *************
+class C__strip_nonalphanumeric__extraction_type__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__tfidf_normalize__ward__StrategyTransformer, self).__init__(
-            'ward', 
+        super(C__strip_nonalphanumeric__extraction_type__StrategyTransformer, self).__init__(
+            'extraction_type', 
             pipeline_data_preprocessor, 
             verbose=verbose
         )
-        
-class C__top_n_significance__ward__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+
+class _C__OneHotEncode__extraction_type__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__top_n_significance__ward__StrategyTransformer, self).__init__(
-            'ward',
-            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
-            insig_map_to='other',
+        super(_C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
+            'extraction_type', 
+            override_categories=None,
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
-# ************* StrategyTransformers specific to ward: BEGIN *************
 
-# ************* StrategyTransformers specific to subvillage: BEGIN *************
-class C__impute_lcase__subvillage__StrategyTransformer(C__impute_lcase__StrategyTransformer):
+class C__OneHotEncode__extraction_type__StrategyTransformer(CCompositeStrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__impute_lcase__subvillage__StrategyTransformer, self).__init__(
-            'subvillage', 
-            pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-        
-class C__missing_value_imputer__subvillage__StrategyTransformer(C__value_replacement__StrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__missing_value_imputer__subvillage__StrategyTransformer, self).__init__(
-            'subvillage', 
-            [{'missing_values': np.nan, 'strategy': 'constant', 'fill_value': 'unknown'}],
-            pipeline_data_preprocessor, 
-            verbose=verbose
-        )
-        
-class C__required_proprocessing__subvillage__StrategyTransformer(CCompositeStrategyTransformer):
-    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__required_proprocessing__subvillage__StrategyTransformer, self).__init__(
-            description="required preprocessing for subvillage", 
+        super(C__OneHotEncode__extraction_type__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode extraction_type", 
             feat_transformer_sequence=[
-                ['subvillage', C__missing_value_imputer__subvillage__StrategyTransformer],
-                ['subvillage', C__impute_lcase__subvillage__StrategyTransformer]
+                ['extraction_type', C__strip_nonalphanumeric__extraction_type__StrategyTransformer],
+                ['extraction_type', _C__OneHotEncode__extraction_type__StrategyTransformer] 
+                # note that since _C__OneHotEncode__extraction_type__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
             ],
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
-        
-class C__top_n_significance__subvillage__StrategyTransformer(C__top_n_significance__StrategyTransformer):
+# ************* StrategyTransformers specific to extraction_type: END *************
+# ************* StrategyTransformers specific to wpt_extraction_type_class__group: END *************
+
+# ************* StrategyTransformers specific to wpt_management__group: BEGIN *************
+# ************* StrategyTransformers specific to management: BEGIN *************
+class C__strip_nonalphanumeric__management__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
     def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
-        super(C__top_n_significance__subvillage__StrategyTransformer, self).__init__(
-            'subvillage',
-            top_n=10, # note that this class is highly tailored to this feature and this value may therefore need to be adjusted
-            insig_map_to='other',
+        super(C__strip_nonalphanumeric__management__StrategyTransformer, self).__init__(
+            'management', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__management__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__management__StrategyTransformer, self).__init__(
+            'management', 
+            override_categories=None,
             pipeline_data_preprocessor=pipeline_data_preprocessor, 
             verbose=verbose
         )
-# ************* StrategyTransformers specific to subvillage: BEGIN *************
-# ************* StrategyTransformers specific to geographic_location__group: BEGIN *************
+
+class C__OneHotEncode__management__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__management__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode management", 
+            feat_transformer_sequence=[
+                ['management', C__strip_nonalphanumeric__management__StrategyTransformer],
+                ['management', _C__OneHotEncode__management__StrategyTransformer] 
+                # note that since _C__OneHotEncode__management__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to management: END *************
+# ************* StrategyTransformers specific to wpt_management__group: END *************
+
+
+# ************* StrategyTransformers specific to payment_frequency_class__group: BEGIN *************
+# ************* StrategyTransformers specific to payment_type: BEGIN *************
+class C__strip_nonalphanumeric__payment_type__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__payment_type__StrategyTransformer, self).__init__(
+            'payment_type', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__payment_type__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__payment_type__StrategyTransformer, self).__init__(
+            'payment_type', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__payment_type__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__payment_type__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode payment_type", 
+            feat_transformer_sequence=[
+                ['payment_type', C__strip_nonalphanumeric__payment_type__StrategyTransformer],
+                ['payment_type', _C__OneHotEncode__payment_type__StrategyTransformer] 
+                # note that since _C__OneHotEncode__payment_type__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to payment_type: END *************
+# ************* StrategyTransformers specific to payment_frequency_class__group: END *************
+
+
+# ************* StrategyTransformers specific to water_quality_class__group: BEGIN *************
+# ************* StrategyTransformers specific to water_quality: BEGIN *************
+class C__strip_nonalphanumeric__water_quality__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__water_quality__StrategyTransformer, self).__init__(
+            'water_quality', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__water_quality__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__water_quality__StrategyTransformer, self).__init__(
+            'water_quality', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__water_quality__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__water_quality__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode water_quality", 
+            feat_transformer_sequence=[
+                ['water_quality', C__strip_nonalphanumeric__water_quality__StrategyTransformer],
+                ['water_quality', _C__OneHotEncode__water_quality__StrategyTransformer] 
+                # note that since _C__OneHotEncode__water_quality__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to water_quality: END *************
+# ************* StrategyTransformers specific to water_quality_class__group: END *************
+
+
+# ************* StrategyTransformers specific to water_quantity_class__group: BEGIN *************
+# ************* StrategyTransformers specific to quantity: BEGIN *************
+class C__strip_nonalphanumeric__quantity__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__quantity__StrategyTransformer, self).__init__(
+            'quantity', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__quantity__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__quantity__StrategyTransformer, self).__init__(
+            'quantity', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__quantity__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__quantity__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode quantity", 
+            feat_transformer_sequence=[
+                ['quantity', C__strip_nonalphanumeric__quantity__StrategyTransformer],
+                ['quantity', _C__OneHotEncode__quantity__StrategyTransformer] 
+                # note that since _C__OneHotEncode__quantity__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to quantity: END *************
+# ************* StrategyTransformers specific to water_quantity_class__group: END *************
+
+
+# ************* StrategyTransformers specific to water_source_type_class__group: BEGIN *************
+# ************* StrategyTransformers specific to source: BEGIN *************
+class C__strip_nonalphanumeric__source__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__source__StrategyTransformer, self).__init__(
+            'source', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__source__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__source__StrategyTransformer, self).__init__(
+            'source', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__source__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__source__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode source", 
+            feat_transformer_sequence=[
+                ['source', C__strip_nonalphanumeric__source__StrategyTransformer],
+                ['source', _C__OneHotEncode__source__StrategyTransformer] 
+                # note that since _C__OneHotEncode__source__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to source: END *************
+# ************* StrategyTransformers specific to water_source_type_class__group: END *************
+
+
+# ************* StrategyTransformers specific to wpt_type_class__group: BEGIN *************
+# ************* StrategyTransformers specific to waterpoint_type: BEGIN *************
+class C__strip_nonalphanumeric__waterpoint_type__StrategyTransformer(C__strip_nonalphanumeric__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__strip_nonalphanumeric__waterpoint_type__StrategyTransformer, self).__init__(
+            'waterpoint_type', 
+            pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class _C__OneHotEncode__waterpoint_type__StrategyTransformer(C__OneHotEncode__StrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(_C__OneHotEncode__waterpoint_type__StrategyTransformer, self).__init__(
+            'waterpoint_type', 
+            override_categories=None,
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+
+class C__OneHotEncode__waterpoint_type__StrategyTransformer(CCompositeStrategyTransformer):
+    def __init__(self, not_used_but_req_for_reflection_instantiation=None, pipeline_data_preprocessor=None, verbose=False):
+        super(C__OneHotEncode__waterpoint_type__StrategyTransformer, self).__init__(
+            description="required preprocessing to OneHot-Encode waterpoint_type", 
+            feat_transformer_sequence=[
+                ['waterpoint_type', C__strip_nonalphanumeric__waterpoint_type__StrategyTransformer],
+                ['waterpoint_type', _C__OneHotEncode__waterpoint_type__StrategyTransformer] 
+                # note that since _C__OneHotEncode__waterpoint_type__StrategyTransformer wraps OneHotEncodingTransformer, 
+                #   the original feat that was encoded will obviously not be in the transformed data set;
+                #   therefore, there is no need to drop it after this
+            ],
+            pipeline_data_preprocessor=pipeline_data_preprocessor, 
+            verbose=verbose
+        )
+# ************* StrategyTransformers specific to waterpoint_type: END *************
+# ************* StrategyTransformers specific to wpt_type_class__group: END *************

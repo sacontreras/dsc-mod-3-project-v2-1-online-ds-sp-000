@@ -31,35 +31,7 @@
 
 
     "feature_groupings": {
-        "wpt_extraction_type_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'The kind of extraction the waterpoint uses'"
-            },
 
-            "features": ["extraction_type", "extraction_type_group", "extraction_type_class"],
-
-            "preprocessing_options": {
-                // extraction_type is categorical-string, so leaving it as is is not an option; options are as follows:
-                "extraction_type": [
-                    [["extraction_type", "C__drop_it__StrategyTransformer"]],
-                    
-                    [
-                        ["extraction_type", "C__strip_nonalphanumeric__extraction_type__StrategyTransformer"],
-                        ["extraction_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    [
-                        ["extraction_type", "C__OneHotEncode__extraction_type__StrategyTransformer"]
-                    ]
-                ],
-
-                "extraction_type_group": [[["extraction_type_group", "C__drop_it__StrategyTransformer"]]],
-
-                "extraction_type_class": [[["extraction_type_class", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
         "amount_tsh__group": {
             "description": {
                 "type": "provided",
@@ -85,624 +57,7 @@
                 ]
             }
         },
-        
-        "water_source_type_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'The source of the water'"
-            },
 
-            "features": ["source", "source_type", "source_class"],
-
-            "preprocessing_options": {
-                // source is categorical-string, so leaving it as is is not an option; options are as follows:
-                "source": [
-                    [["source", "C__drop_it__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [
-                        ["source", "C__strip_nonalphanumeric__source__StrategyTransformer"],
-                        ["source", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ],
-
-                "source_type": [[["source_type", "C__drop_it__StrategyTransformer"]]],
-
-                "source_class": [[["source_class", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "water_quantity_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'The quantity of water'"
-            },
-
-            "features": ["quantity", "quantity_group"],
-
-            "preprocessing_options": {
-                // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
-                "quantity": [
-                    [["quantity", "C__drop_it__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["quantity", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
-                ],
-
-                "quantity_group": [[["quantity_group", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "water_quality_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'The quality of the water'"
-            },
-
-            "features": ["water_quality", "quality_group"],
-
-            "preprocessing_options": {
-                // water_quality is categorical-string, so leaving it as is is not an option; options are as follows:
-                "water_quality": [
-                    [["water_quality", "C__drop_it__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["water_quality", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
-                ],
-
-                "quality_group": [[["quality_group", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "gps_height__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Altitude of the well'"
-            },
-
-            "features": ["gps_height"],
-
-            "preprocessing_options": {
-                "gps_height": [
-                    [["gps_height", "C__drop_it__StrategyTransformer"]],
-                    
-                    [["gps_height", "C__leave_it_as_is__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["gps_height", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
-                    
-                    //if we treat as continuous
-                    [["gps_height", "C__replace_outliers_with_mean__StrategyTransformer"]],
-                    [["gps_height", "C__replace_outliers_with_median__StrategyTransformer"]],
-                    [["gps_height", "C__replace_0_with_nan__StrategyTransformer"]]
-                ]
-            }
-        },
-        
-        "gps_coordinates__group": {
-            "description": {
-                "type": "provided",
-                "description": "('GPS coordinate' (latitude), 'GPS coordinate' (longitude))"
-            },
-
-            "features": ["latitude", "longitude"],
-
-            "preprocessing_options": {
-                //note that these constitute an ordered-pair (of continuous values), so if we drop one we must drop the other
-                //  the same holds for scaling if we do it
-                //"weird" values (but not outliers) can be handled individually in each
-                //NO outlier processing!
-                "gps_coordinates": [
-                    [// 0x00
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x11
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    // if for some reason one may contribute to the model and not the other??
-                    [// 0x01
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    // if for some reason one may contribute to the model and not the other??
-                    [// 0x10
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [//0x02
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"], //replaces weird values - should probably go by another name
-                        ["latitude", "C__drop_it__StrategyTransformer"],
-                        ["longitude", "C__leave_it_as_is__StrategyTransformer"]
-                    ],
-                    
-                    [//0x20
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"], //replaces weird values - should probably go by another name
-                        ["latitude", "C__leave_it_as_is__StrategyTransformer"],
-                        ["longitude", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x22
-                        ["gps_coordinates", "C__required_proprocessing__gps_coordinates__StrategyTransformer"] //replaces weird values
-                    ]
-                ]
-            }
-        },
-        
-        "wpt_type_class__group": {
-            "description": {
-                "type": "provided",
-                "description": "'The kind of waterpoint'"
-            },
-
-            "features": ["waterpoint_type", "waterpoint_type_group"],
-
-            "preprocessing_options": {
-                // waterpoint_type is categorical-string, so leaving it as is is not an option; options are as follows:
-                "waterpoint_type": [
-                    [["waterpoint_type", "C__drop_it__StrategyTransformer"]],
-                    
-                    //categorical target encoding
-                    [["waterpoint_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
-                ],
-
-                "waterpoint_type_group": [[["waterpoint_type_group", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
-        "installer__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Organization that installed the well'"
-            },
-
-            "features": ["installer"],
-
-            "preprocessing_options": {
-                // installer is categorical-string, so leaving it as is is not an option; options are as follows:
-                "installer": [
-                    [
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    //categorical target encoding - but some preprocessing is required beforehand since there are nulls and weird values
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_normalize__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    //KMeans classification (clusters) on top of NLP TFIDF normalization - uncomment if TFIDF increases accuracy but leave commented out otherwise since it takes a long time
-                    /*
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
-                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
-                        ["installer", "C__drop_it__StrategyTransformer"]
-                    ]
-                    */
-                    
-                    [
-                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
-                        ["installer", "C__top_n_significance__installer__StrategyTransformer"],
-                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-        
-        "population__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Population around the well'"
-            },
-
-            "features": ["population"],
-
-            "preprocessing_options": {
-                // population is numeric, so options are as follows 
-                "population": [
-                    [["population", "C__drop_it__StrategyTransformer"]],
-                    
-                    [["population", "C__leave_it_as_is__StrategyTransformer"]],
-
-                    //categorical target encoding
-                    [["population", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
-                    
-                    //if we treat as continuous
-                    [["population", "C__replace_outliers_with_mean__StrategyTransformer"]],
-                    [ //out of curiosity, try stacked mean (on top of mean) outlier replacement since EDA showed this removes ALL outliers
-                        ["population", "C__replace_outliers_with_mean__StrategyTransformer"],
-                        ["population", "C__replace_outliers_with_mean__StrategyTransformer"]
-                    ],
-                    [["population", "C__replace_outliers_with_median__StrategyTransformer"]],
-                    [["population", "C__replace_0_with_nan__StrategyTransformer"]]
-                ]
-            }
-        },
-        
-        "geographic_location__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Geographic location'"
-            },
-
-            "features": ["region_code", "district_code", "subvillage", "region", "lga", "ward"],
-
-            "preprocessing_options": {
-                // 5 features with 2 preprocessing options each = 2^5 = 32 permutations to cover as a group
-                "geographic_location": [
-                    // all "off"
-                    [// 11111
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    // one "on"
-                    [// 10000
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 01000
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 00100
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 00010
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 00001
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    //two "on": 5 choose 2 = 10 permutations
-                    [// 11000
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 10100
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 10010
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 10001
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 01100
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 01010
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 01001
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 00101
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 00101
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 00011
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    //three "on": 5 choose 3 = 5 choose 2 = 10 permutations
-                    [// 00111
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 01011
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 01101
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 01110
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 10011
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 10101
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 10110
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 11001
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 11010
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    [// 11100
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    //four "on"
-                    [// 01111
-                        ["region_code", "C__drop_it__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 10111
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__drop_it__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 11011
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__drop_it__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 11101
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__drop_it__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    [// 11110
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    //all "on"
-                    [// 11111
-                        ["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ],
-
-                //always drop subvillage
-                "subvillage": [
-                    [["subvillage", "C__drop_it__StrategyTransformer"]],
-                    
-                    [
-                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
-                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    [
-                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
-                        ["subvillage", "C__top_n_significance__subvillage__StrategyTransformer"],
-                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-        
-        "wpt_operator__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Who operates the waterpoint'"
-            },
-
-            "features": ["scheme_management", "scheme_name"],
-
-            "preprocessing_options": {
-                "wpt_operator": [
-                    [// 0x00
-                        ["scheme_management", "C__drop_it__StrategyTransformer"],
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x10
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x01
-                        ["scheme_management", "C__drop_it__StrategyTransformer"],
-                        
-                        //categorical target encoding - but some preprocessing is required beforehand
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x02
-                        ["scheme_management", "C__drop_it__StrategyTransformer"],
-                        
-                        //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_normalize__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    /* Commented out since it takes so long - if TFIDF normalization increases accuracy then this has a chance to also... then uncomment
-                    [// 0x03
-                        ["scheme_management", "C__drop_it__StrategyTransformer"],
-                        
-                        //KMeans classification (clusters) on top of NLP TFIDF normalization
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    
-                    [// 0x04
-                        ["scheme_management", "C__drop_it__StrategyTransformer"],
-                        
-                        //top-n significance, then target-encode
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__top_n_significance__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x11
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        
-                        //categorical target encoding - but some preprocessing is required beforehand
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    [// 0x12
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        
-                        //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_normalize__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-                    
-                    /* Commented out since it takes so long - if TFIDF normalization increases accuracy then this has a chance to also... then uncomment
-                    [// 0x13
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        
-                        //KMeans classification (clusters) on top of NLP TFIDF normalization
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
-                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
-                        ["scheme_name", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    
-                    [// 0x14
-                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
-                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"],
-                        
-                        //top-n significance, then target-encode
-                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__top_n_significance__scheme_name__StrategyTransformer"],
-                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ]
-            }
-        },
-        
         "pump_age_at_observation_date__group": {
             "description": {
                 "type": "engineered",
@@ -757,28 +112,180 @@
                 ]
             }
         },
-        
-        "payment_frequency_class__group": {
+
+        "funder__group": {
             "description": {
                 "type": "provided",
-                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
+                "description": "'Who funded the well'"
             },
 
-            "features": ["payment", "payment_type"],
+            "features": ["funder"],
 
             "preprocessing_options": {
-                // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
-                "payment_type": [
-                    [["payment_type", "C__drop_it__StrategyTransformer"]],
+                // funder is categorical-string, so leaving it as is is not an option
+                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
+                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
+                //      options are as follows:
+                "funder": [
+                    [
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
                     
                     //categorical target encoding
-                    [["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
-                ],
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__strip_nonalphanumeric__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
 
-                "payment": [[["payment", "C__drop_it__StrategyTransformer"]]]
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_normalize__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //KMeans classification (clusters) on top of NLP TFIDF normalization - if TFIDF improves accuracy then uncomment this to try it
+                    /*
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
+                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
+                        ["funder", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    
+                    [
+                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
+                        ["funder", "C__strip_nonalphanumeric__funder__StrategyTransformer"],
+                        ["funder", "C__top_n_significance__funder__StrategyTransformer"],
+                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
             }
         },
-        
+
+        "gps_height__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Altitude of the well'"
+            },
+
+            "features": ["gps_height"],
+
+            "preprocessing_options": {
+                "gps_height": [
+                    [["gps_height", "C__drop_it__StrategyTransformer"]],
+                    
+                    [["gps_height", "C__leave_it_as_is__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [["gps_height", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //if we treat as continuous
+                    [["gps_height", "C__replace_outliers_with_mean__StrategyTransformer"]],
+                    [["gps_height", "C__replace_outliers_with_median__StrategyTransformer"]],
+                    [["gps_height", "C__replace_0_with_nan__StrategyTransformer"]]
+                ]
+            }
+        },
+
+        "installer__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Organization that installed the well'"
+            },
+
+            "features": ["installer"],
+
+            "preprocessing_options": {
+                // installer is a high-cardinality string-categorical, so leaving it as is is not an option; options are as follows:
+                "installer": [
+                    [
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding - but some preprocessing is required beforehand since there are nulls and weird values
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__strip_nonalphanumeric__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_normalize__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //KMeans classification (clusters) on top of NLP TFIDF normalization - uncomment if TFIDF increases accuracy but leave commented out otherwise since it takes a long time
+                    /*
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__tfidf_kmeans_classify__installer__StrategyTransformer"], //new feature installer_tfidf_kmeans_class exists after this
+                        ["installer_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature installer_tfidf_kmeans_class_target_encoded exists after this, implicitly drops installer_tfidf_kmeans_class
+                        ["installer", "C__drop_it__StrategyTransformer"]
+                    ]
+                    */
+                    
+                    [
+                        ["installer", "C__required_proprocessing__installer__StrategyTransformer"],
+                        ["installer", "C__strip_nonalphanumeric__installer__StrategyTransformer"],
+                        ["installer", "C__top_n_significance__installer__StrategyTransformer"],
+                        ["installer", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
+        "gps_coordinates__group": {
+            "description": {
+                "type": "provided",
+                "description": "('GPS coordinate' (latitude), 'GPS coordinate' (longitude))"
+            },
+
+            "features": ["latitude", "longitude"],
+
+            "preprocessing_options": {
+                //note that these constitute an ordered-pair (of continuous values), so if we drop one we must drop the other
+                //  the same holds for scaling if we do it
+                //"weird" values (but not outliers) can be handled individually in each
+                //NO outlier processing!
+
+                "latitude": [
+                    [["latitude", "C__drop_it__StrategyTransformer"]],
+
+                    [["latitude", "C__leave_it_as_is__StrategyTransformer"]],
+
+                    [
+                        ["latitude", "C__required_proprocessing__latitude__StrategyTransformer"], //replaces weird values
+                        ["latitude", "C__leave_it_as_is__StrategyTransformer"]
+                    ]
+                ],
+
+                "longitude": [
+                    [["longitude", "C__drop_it__StrategyTransformer"]],
+
+                    [["longitude", "C__leave_it_as_is__StrategyTransformer"]] 
+                ]
+            }
+        },
+
+        "wpt_name__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Name of the waterpoint if there is one'"
+            },
+
+            "features": ["wpt_name"],
+
+            "preprocessing_options": {
+                // wpt_name is categorical-string, so leaving it as is is not an option; it's an identifier so we will always drop it
+                "wpt_name": [[["wpt_name", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
         "num_private__group": {
             "description": {
                 "type": "provided",
@@ -799,21 +306,7 @@
                 ]
             }
         },
-        
-        "wpt_name__group": {
-            "description": {
-                "type": "provided",
-                "description": "'Name of the waterpoint if there is one'"
-            },
 
-            "features": ["wpt_name"],
-
-            "preprocessing_options": {
-                // wpt_name is categorical-string, so leaving it as is is not an option; it's an identifier so we will always drop it
-                "wpt_name": [[["wpt_name", "C__drop_it__StrategyTransformer"]]]
-            }
-        },
-        
         "basin__group": {
             "description": {
                 "type": "provided",
@@ -830,8 +323,123 @@
                     //categorical target encoding
                     [
                         ["basin", "C__required_proprocessing__basin__StrategyTransformer"],
+                        ["basin", "C__strip_nonalphanumeric__basin__StrategyTransformer"],
                         ["basin", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //one-hot encoding as an alternative to target-encoding since this is this is a low cardinality cardinality categorical
+                    [
+                        ["basin", "C__required_proprocessing__basin__StrategyTransformer"],
+                        ["basin", "C__OneHotEncode__basin__StrategyTransformer"]
                     ]
+                ]
+            }
+        },
+
+        "geographic_location__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Geographic location'"
+            },
+
+            "features": ["region_code", "district_code", "subvillage", "region", "lga", "ward"],
+
+            "preprocessing_options": {
+                "region_code": [ // string-categorical, therefore leave-it-as is not an option
+                    [["region_code", "C__drop_it__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [["region_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+
+                    //one-hot encoding
+                    [["region_code", "C__OneHotEncode__region_code__StrategyTransformer"]]
+                ],
+
+                "district_code": [ // string-categorical, therefore leave-it-as is not an option
+                    [["district_code", "C__drop_it__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [["district_code", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+
+                    //one-hot encoding
+                    [["district_code", "C__OneHotEncode__district_code__StrategyTransformer"]]
+                ],
+
+                "subvillage": [ // (high-cardinality) string-categorical, therefore leave-it-as is not an option
+                    [["subvillage", "C__drop_it__StrategyTransformer"]],
+                    
+                    [
+                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
+                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ],
+
+                "region": [ // low-cardinality string-categorical, therefore leave-it-as is not an option
+                    [["region", "C__drop_it__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [
+                        ["region", "C__strip_nonalphanumeric__region__StrategyTransformer"],
+                        ["region", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //one-hot encoding
+                    [["region", "C__OneHotEncode__region__StrategyTransformer"]]
+                ],
+
+                "lga": [ // string-categorical, therefore leave-it-as is not an option
+                    [["lga", "C__drop_it__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [["lga", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
+                ],
+
+                "ward": [ // (high-cardinality) string-categorical, therefore leave-it-as is not an option
+                    [["ward", "C__drop_it__StrategyTransformer"]],
+                    
+                    [["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+
+                    [
+                        ["ward", "C__tfidf_normalize__ward__StrategyTransformer"],
+                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["ward", "C__top_n_significance__ward__StrategyTransformer"],
+                        ["ward", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]    
+                    ]
+                ]
+            }
+        },
+
+        "population__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Population around the well'"
+            },
+
+            "features": ["population"],
+
+            "preprocessing_options": {
+                // population is numeric, so options are as follows 
+                "population": [
+                    [["population", "C__drop_it__StrategyTransformer"]],
+                    
+                    [["population", "C__leave_it_as_is__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [["population", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //if we treat as continuous
+                    [["population", "C__replace_outliers_with_mean__StrategyTransformer"]],
+                    [ //out of curiosity, try stacked mean (on top of mean) outlier replacement since EDA showed this removes ALL outliers
+                        ["population", "C__replace_outliers_with_mean__StrategyTransformer"],
+                        ["population", "C__replace_outliers_with_mean__StrategyTransformer"]
+                    ],
+                    [// analysis shows this strategy to be clearly inferior to the mean but we include it anyway "just to see"
+                        ["population", "C__replace_outliers_with_median__StrategyTransformer"]
+                    ],
+                    [["population", "C__replace_0_with_nan__StrategyTransformer"]]
                 ]
             }
         },
@@ -870,7 +478,72 @@
                 ]
             }
         },
-        
+
+        "wpt_operator__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Who operates the waterpoint'"
+            },
+
+            "features": ["scheme_management", "scheme_name"],
+
+            "preprocessing_options": {
+                "scheme_management": [ // low-cardinality string-categorical, therefore leave-it-as is not an option
+                    [["scheme_management", "C__drop_it__StrategyTransformer"]],
+
+                    //categorical target encoding
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__strip_nonalphanumeric__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //one-hot encoding
+                    [
+                        ["scheme_management", "C__required_proprocessing__scheme_management__StrategyTransformer"],
+                        ["scheme_management", "C__OneHotEncode__scheme_management__StrategyTransformer"]
+                    ]
+                ],    
+
+                "scheme_name": [ // high-cardinality string-categorical
+                    [
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding - but some preprocessing is required beforehand since there are nulls and weird values
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__strip_nonalphanumeric__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+                    
+                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_normalize__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    //KMeans classification (clusters) on top of NLP TFIDF normalization - uncomment if TFIDF increases accuracy but leave commented out otherwise since it takes a long time
+                    /*
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__tfidf_kmeans_classify__scheme_name__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class exists after this
+                        ["scheme_name_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature scheme_name_tfidf_kmeans_class_target_encoded exists after this, implicitly drops scheme_name_tfidf_kmeans_class
+                        ["scheme_name", "C__drop_it__StrategyTransformer"]
+                    ],
+                    */
+                    
+                    [
+                        ["scheme_name", "C__required_proprocessing__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__strip_nonalphanumeric__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__top_n_significance__scheme_name__StrategyTransformer"],
+                        ["scheme_name", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                ]
+            }
+        },
+
         "permit__group": {
             "description": {
                 "type": "provided",
@@ -890,6 +563,35 @@
             }
         },
 
+        "wpt_extraction_type_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of extraction the waterpoint uses'"
+            },
+
+            "features": ["extraction_type", "extraction_type_group", "extraction_type_class"],
+
+            "preprocessing_options": {
+                // extraction_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                "extraction_type": [
+                    [["extraction_type", "C__drop_it__StrategyTransformer"]],
+                    
+                    [
+                        ["extraction_type", "C__strip_nonalphanumeric__extraction_type__StrategyTransformer"],
+                        ["extraction_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["extraction_type", "C__OneHotEncode__extraction_type__StrategyTransformer"]
+                    ]
+                ],
+
+                "extraction_type_group": [[["extraction_type_group", "C__drop_it__StrategyTransformer"]]],
+
+                "extraction_type_class": [[["extraction_type_class", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
         "wpt_management__group": {
             "description": {
                 "type": "provided",
@@ -904,60 +606,159 @@
                     [["management", "C__drop_it__StrategyTransformer"]],
                     
                     //categorical target encoding
-                    [["management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]]
+                    [
+                        ["management", "C__strip_nonalphanumeric__management__StrategyTransformer"],
+                        ["management", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["management", "C__OneHotEncode__management__StrategyTransformer"]
+                    ]
                 ],
 
                 "management_group": [[["management_group", "C__drop_it__StrategyTransformer"]]]
             }
         },
 
-        "funder__group": {
+        "payment_frequency_class__group": {
             "description": {
                 "type": "provided",
-                "description": "'Who funded the well'"
+                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
             },
 
-            "features": ["funder"],
+            "features": ["payment", "payment_type"],
 
             "preprocessing_options": {
-                // funder is categorical-string, so leaving it as is is not an option
-                //      note that if this feature is kept, then it must ALWAYS be preprocessed with C__required_proprocessing__funder__StrategyTransformer FIRST
-                //          before subsequent processing - in this case, preprocessing (within that class) includes converting to lcase, etc. but see class for details
-                //      options are as follows:
-                "funder": [
-                    [
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
+                // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                "payment_type": [
+                    [["payment_type", "C__drop_it__StrategyTransformer"]],
                     
                     //categorical target encoding
                     [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                        ["payment_type", "C__strip_nonalphanumeric__payment_type__StrategyTransformer"],
+                        ["payment_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
                     ],
 
-                    //categorical target encoding, preceded by NLP TFIDF normalization (to get rid of duplicates)
                     [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_normalize__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ],
-
-                    //KMeans classification (clusters) on top of NLP TFIDF normalization
-                    /*
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__tfidf_kmeans_classify__funder__StrategyTransformer"], //new feature funder_tfidf_kmeans_class exists after this
-                        ["funder_tfidf_kmeans_class", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"], //new feature funder_tfidf_kmeans_class_target_encoded exists after this, implicitly drops funder_tfidf_kmeans_class
-                        ["funder", "C__drop_it__StrategyTransformer"]
-                    ],
-                    */
-                    
-                    [
-                        ["funder", "C__required_proprocessing__funder__StrategyTransformer"],
-                        ["funder", "C__top_n_significance__funder__StrategyTransformer"],
-                        ["funder", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                        ["payment_type", "C__OneHotEncode__payment_type__StrategyTransformer"]
                     ]
-                ]
+                ],
+
+                "payment": [[["payment", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+        "water_quality_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The quality of the water'"
+            },
+
+            "features": ["water_quality", "quality_group"],
+
+            "preprocessing_options": {
+                // water_quality is categorical-string, so leaving it as is is not an option; options are as follows:
+                "water_quality": [
+                    [["water_quality", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [
+                        ["water_quality", "C__strip_nonalphanumeric__water_quality__StrategyTransformer"],
+                        ["water_quality", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["water_quality", "C__OneHotEncode__water_quality__StrategyTransformer"]
+                    ]
+                ],
+
+                "quality_group": [[["quality_group", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+        "water_quantity_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The quantity of water'"
+            },
+
+            "features": ["quantity", "quantity_group"],
+
+            "preprocessing_options": {
+                // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
+                "quantity": [
+                    [["quantity", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [
+                        ["quantity", "C__strip_nonalphanumeric__quantity__StrategyTransformer"],
+                        ["quantity", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["quantity", "C__OneHotEncode__quantity__StrategyTransformer"]
+                    ]
+                ],
+
+                "quantity_group": [[["quantity_group", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+        "water_source_type_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The source of the water'"
+            },
+
+            "features": ["source", "source_type", "source_class"],
+
+            "preprocessing_options": {
+                // source is categorical-string, so leaving it as is is not an option; options are as follows:
+                "source": [
+                    [["source", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [
+                        ["source", "C__strip_nonalphanumeric__source__StrategyTransformer"],
+                        ["source", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["quantity", "C__OneHotEncode__source__StrategyTransformer"]
+                    ]
+                ],
+
+                "source_type": [[["source_type", "C__drop_it__StrategyTransformer"]]],
+
+                "source_class": [[["source_class", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+
+        "wpt_type_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of waterpoint'"
+            },
+
+            "features": ["waterpoint_type", "waterpoint_type_group"],
+
+            "preprocessing_options": {
+                // waterpoint_type is categorical-string, so leaving it as is is not an option; options are as follows:
+                "waterpoint_type": [
+                    [["waterpoint_type", "C__drop_it__StrategyTransformer"]],
+                    
+                    //categorical target encoding
+                    [
+                        ["waterpoint_type", "C__strip_nonalphanumeric__waterpoint_type__StrategyTransformer"],
+                        ["waterpoint_type", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ],
+
+                    [
+                        ["waterpoint_type", "C__OneHotEncode__waterpoint_type__StrategyTransformer"]
+                    ]
+                ],
+
+                "waterpoint_type_group": [[["waterpoint_type_group", "C__drop_it__StrategyTransformer"]]]
             }
         }
     },

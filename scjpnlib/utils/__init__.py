@@ -853,8 +853,9 @@ def analyze_distributions(
                     weight='bold'
                 )
 
-            # ax.set_ybound(upper=1, lower=0)
-            ax.set_ybound(lower=0, upper=pop_rep)
+            ax.set_ybound(upper=1, lower=0)
+            # ax.set_ybound(lower=0, upper=pop_rep)
+
             plt.xticks(rotation=90)
             plt.show()
 
@@ -1011,8 +1012,8 @@ def analyze_distributions__top_n(
                 weight='bold'
             )
 
-        ax.set_ybound(upper=pop_rep, lower=0)
-        # ax.set_ybound(upper=1, lower=0)
+        # ax.set_ybound(upper=pop_rep, lower=0)
+        ax.set_ybound(upper=1, lower=0)
 
         plt.xticks(rotation=90)
 
