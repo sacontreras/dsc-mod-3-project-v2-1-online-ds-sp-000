@@ -31,7 +31,7 @@
 
 
     "feature_groupings": {
-
+    
         "amount_tsh__group": {
             "description": {
                 "type": "provided",
@@ -57,7 +57,8 @@
                 ]
             }
         },
-
+        
+        
         "pump_age_at_observation_date__group": {
             "description": {
                 "type": "engineered",
@@ -112,7 +113,8 @@
                 ]
             }
         },
-
+        
+        
         "funder__group": {
             "description": {
                 "type": "provided",
@@ -164,7 +166,8 @@
                 ]
             }
         },
-
+        
+        
         "gps_height__group": {
             "description": {
                 "type": "provided",
@@ -189,7 +192,8 @@
                 ]
             }
         },
-
+        
+        
         "installer__group": {
             "description": {
                 "type": "provided",
@@ -238,7 +242,8 @@
                 ]
             }
         },
-
+        
+        
         "gps_coordinates__group": {
             "description": {
                 "type": "provided",
@@ -271,7 +276,8 @@
                 ]
             }
         },
-
+        
+        
         "wpt_name__group": {
             "description": {
                 "type": "provided",
@@ -285,7 +291,8 @@
                 "wpt_name": [[["wpt_name", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
+        
+        
         "num_private__group": {
             "description": {
                 "type": "provided",
@@ -299,14 +306,19 @@
                 "num_private": [
                     [["num_private", "C__drop_it__StrategyTransformer"]],
                     
-                    //IF for some weird reason the non-nulls are significant...
+                    [["num_private", "C__leave_it_as_is__StrategyTransformer"]],
+                    
+                    [["num_private", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]],
+                    
+                    //Treat as continuous
                     [["num_private", "C__replace_outliers_with_mean__StrategyTransformer"]],
                     [["num_private", "C__replace_outliers_with_median__StrategyTransformer"]],
                     [["num_private", "C__replace_0_with_nan__StrategyTransformer"]]
                 ]
             }
         },
-
+        
+        
         "basin__group": {
             "description": {
                 "type": "provided",
@@ -335,15 +347,16 @@
                 ]
             }
         },
-
-        "geographic_location__group": {
+        
+        
+        "geographic_location_coded__group": {
             "description": {
                 "type": "provided",
-                "description": "'Geographic location'"
+                "description": "' Geographic location (coded)'"
             },
-
-            "features": ["region_code", "district_code", "subvillage", "region", "lga", "ward"],
-
+            
+            "features": ["region_code", "district_code"],
+            
             "preprocessing_options": {
                 "region_code": [ // string-categorical, therefore leave-it-as is not an option
                     [["region_code", "C__drop_it__StrategyTransformer"]],
@@ -363,17 +376,18 @@
 
                     //one-hot encoding
                     [["district_code", "C__OneHotEncode__district_code__StrategyTransformer"]]
-                ],
+                ]
+            }
+        },
+        "geographic_location__group": {
+            "description": {
+                "type": "provided",
+                "description": "'Geographic location'"
+            },
 
-                "subvillage": [ // (high-cardinality) string-categorical, therefore leave-it-as is not an option
-                    [["subvillage", "C__drop_it__StrategyTransformer"]],
-                    
-                    [
-                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
-                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
-                    ]
-                ],
+            "features": ["region_code", "district_code", "subvillage", "region", "lga", "ward"],
 
+            "preprocessing_options": {
                 "region": [ // low-cardinality string-categorical, therefore leave-it-as is not an option
                     [["region", "C__drop_it__StrategyTransformer"]],
 
@@ -411,7 +425,30 @@
                 ]
             }
         },
+        "geographic_location_subvillage_group": {
+            "description": {
+                "type": "provided",
+                "description": "'Geographic location'"
+            },
 
+            "features": ["subvillage"],
+
+            "preprocessing_options": {
+                "subvillage": [ // (high-cardinality) string-categorical, therefore leave-it-as is not an option
+                    [["subvillage", "C__drop_it__StrategyTransformer"]]
+                    
+                    /*
+                    ,
+                    [
+                        ["subvillage", "C__required_proprocessing__subvillage__StrategyTransformer"],
+                        ["subvillage", "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"]
+                    ]
+                    */
+                ]
+            }
+        },
+        
+        
         "population__group": {
             "description": {
                 "type": "provided",
@@ -443,7 +480,8 @@
                 ]
             }
         },
-
+        
+        
         "public_meeting__group": {
             "description": {
                 "type": "provided",
@@ -462,7 +500,8 @@
                 ]
             }
         },
-
+        
+        
         "recorded_by__group": {
             "description": {
                 "type": "provided",
@@ -478,7 +517,8 @@
                 ]
             }
         },
-
+        
+        
         "wpt_operator__group": {
             "description": {
                 "type": "provided",
@@ -543,7 +583,8 @@
                 ]
             }
         },
-
+        
+        
         "permit__group": {
             "description": {
                 "type": "provided",
@@ -562,14 +603,15 @@
                 ]
             }
         },
-
-        "wpt_extraction_type_class__group": {
+        
+        
+        "wpt_extraction_type_class__extraction_type__group": {
             "description": {
                 "type": "provided",
                 "description": "'The kind of extraction the waterpoint uses'"
             },
 
-            "features": ["extraction_type", "extraction_type_group", "extraction_type_class"],
+            "features": ["extraction_type"], // we place extraction_type_group and extraction_type_class in their own feature-groups since we know they will always be dropped
 
             "preprocessing_options": {
                 // extraction_type is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -584,21 +626,42 @@
                     [
                         ["extraction_type", "C__OneHotEncode__extraction_type__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "wpt_extraction_type_class__extraction_type_group__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of extraction the waterpoint uses'"
+            },
 
-                "extraction_type_group": [[["extraction_type_group", "C__drop_it__StrategyTransformer"]]],
+            "features": ["extraction_type_group"],
 
+            "preprocessing_options": {
+                "extraction_type_group": [[["extraction_type_group", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+        "wpt_extraction_type_class__extraction_type_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of extraction the waterpoint uses'"
+            },
+
+            "features": ["extraction_type_class"],
+
+            "preprocessing_options": {
                 "extraction_type_class": [[["extraction_type_class", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
-        "wpt_management__group": {
+        
+        
+        "wpt_management__management__group": {
             "description": {
                 "type": "provided",
                 "description": "'How the waterpoint is managed'"
             },
 
-            "features": ["management", "management_group"],
+            "features": ["management"], // place management_group in its own group since it will always be dropped
 
             "preprocessing_options": {
                 // management is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -614,19 +677,30 @@
                     [
                         ["management", "C__OneHotEncode__management__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "wpt_management__management_group__group": {
+            "description": {
+                "type": "provided",
+                "description": "'How the waterpoint is managed'"
+            },
 
+            "features": ["management_group"],
+
+            "preprocessing_options": {
                 "management_group": [[["management_group", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
-        "payment_frequency_class__group": {
+        
+        
+        "payment_frequency_class__payment_type__group": {
             "description": {
                 "type": "provided",
                 "description": "'What the water costs'" // this is an awful description, actually, but whatever...
             },
 
-            "features": ["payment", "payment_type"],
+            "features": ["payment_type"], // place in its own group since it will always be dropped
 
             "preprocessing_options": {
                 // payment_type is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -642,19 +716,30 @@
                     [
                         ["payment_type", "C__OneHotEncode__payment_type__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "payment_frequency_class__payment__group": {
+            "description": {
+                "type": "provided",
+                "description": "'What the water costs'" // this is an awful description, actually, but whatever...
+            },
 
+            "features": ["payment"],
+
+            "preprocessing_options": {
                 "payment": [[["payment", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
-        "water_quality_class__group": {
+        
+        
+        "water_quality_class__water_quality__group": {
             "description": {
                 "type": "provided",
                 "description": "'The quality of the water'"
             },
 
-            "features": ["water_quality", "quality_group"],
+            "features": ["water_quality"],
 
             "preprocessing_options": {
                 // water_quality is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -670,19 +755,30 @@
                     [
                         ["water_quality", "C__OneHotEncode__water_quality__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "water_quality_class__quality_group__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The quality of the water'"
+            },
 
+            "features": ["water_quality", "quality_group"],
+
+            "preprocessing_options": {
                 "quality_group": [[["quality_group", "C__drop_it__StrategyTransformer"]]]
             }
         },
-
-        "water_quantity_class__group": {
+        
+        
+        "water_quantity_class__quantity__group": {
             "description": {
                 "type": "provided",
                 "description": "'The quantity of water'"
             },
 
-            "features": ["quantity", "quantity_group"],
+            "features": ["quantity"],
 
             "preprocessing_options": {
                 // quantity is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -698,19 +794,30 @@
                     [
                         ["quantity", "C__OneHotEncode__quantity__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "water_quantity_class__quantity_group__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The quantity of water'"
+            },
 
+            "features": ["quantity_group"],
+
+            "preprocessing_options": {
                 "quantity_group": [[["quantity_group", "C__drop_it__StrategyTransformer"]]]
             }
         },
 
-        "water_source_type_class__group": {
+
+        "water_source_type_class__source__group": {
             "description": {
                 "type": "provided",
                 "description": "'The source of the water'"
             },
 
-            "features": ["source", "source_type", "source_class"],
+            "features": ["source"],
 
             "preprocessing_options": {
                 // source is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -726,21 +833,42 @@
                     [
                         ["quantity", "C__OneHotEncode__source__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "water_source_type_class__source_type__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The source of the water'"
+            },
 
-                "source_type": [[["source_type", "C__drop_it__StrategyTransformer"]]],
+            "features": ["source_type"],
 
+            "preprocessing_options": {
+                "source_type": [[["source_type", "C__drop_it__StrategyTransformer"]]]
+            }
+        },
+        "water_source_type_class__source_class__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The source of the water'"
+            },
+
+            "features": ["source_class"],
+
+            "preprocessing_options": {
                 "source_class": [[["source_class", "C__drop_it__StrategyTransformer"]]]
             }
         },
 
-        "wpt_type_class__group": {
+
+        "wpt_type_class__waterpoint_type__group": {
             "description": {
                 "type": "provided",
                 "description": "'The kind of waterpoint'"
             },
 
-            "features": ["waterpoint_type", "waterpoint_type_group"],
+            "features": ["waterpoint_type"],
 
             "preprocessing_options": {
                 // waterpoint_type is categorical-string, so leaving it as is is not an option; options are as follows:
@@ -756,8 +884,18 @@
                     [
                         ["waterpoint_type", "C__OneHotEncode__waterpoint_type__StrategyTransformer"]
                     ]
-                ],
+                ]
+            }
+        },
+        "wpt_type_class__waterpoint_type_group__group": {
+            "description": {
+                "type": "provided",
+                "description": "'The kind of waterpoint'"
+            },
 
+            "features": ["waterpoint_type_group"],
+
+            "preprocessing_options": {
                 "waterpoint_type_group": [[["waterpoint_type_group", "C__drop_it__StrategyTransformer"]]]
             }
         }

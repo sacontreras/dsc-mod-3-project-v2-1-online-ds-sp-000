@@ -167,7 +167,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
@@ -346,7 +346,7 @@
 
                         "param_grid": {
                             // "Logloss" is default but we obviously want a variant of multiclass
-                            "loss_function: ["MultiClass", "MultiClassOneVsAll"]
+                            "loss_function": ["MultiClass", "MultiClassOneVsAll"]
                         },
 
                         "last_best": {}
@@ -405,20 +405,6 @@
                     }
                 }
             ]
-        }
-    },
-    
-    "SVM": {
-        "run": true,
-
-        "trials": {
-            "run": false,
-            
-            "array": []
-        }
-        
-        "params": {
-        
         }
     }
 }
