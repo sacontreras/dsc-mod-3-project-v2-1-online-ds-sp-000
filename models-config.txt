@@ -167,7 +167,7 @@
         "run": true,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
@@ -287,17 +287,16 @@
         //      make manual adjust ments as desired here
         //
         // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
-        "params": 
+        "params":
         /*
         {   
-            "gamma": 0,
-            "learning_rate": 0.1,
-            "max_depth": 15,
-            "min_child_weight": 5,
-            "n_estimators": 250
+            'gamma': 0,
+            'learning_rate': 0.3,
+            'max_depth': 10,
+            'min_child_weight': 5,
+            'n_estimators': 100
         }
         */
-        
         {   
             "gamma": 0,
             "learning_rate": 0.1,
@@ -307,7 +306,7 @@
         }
     },
     
-    "Catboost": {
+    "CatBoostClassifier": {
         "run": true,
 
         "trials": {
@@ -405,6 +404,15 @@
                     }
                 }
             ]
+        },
+        
+        "params": 
+        {   
+            "grow_policy": "Depthwise",
+            "loss_function": "MultiClass",
+            "max_depth": 10,
+            "n_estimators": 1000,
+            "nan_mode": "Min"
         }
     }
 }

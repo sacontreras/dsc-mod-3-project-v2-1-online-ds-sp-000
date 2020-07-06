@@ -1,0 +1,222 @@
+{
+    "extraction_type": [
+        [
+            "extraction_type",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ]
+    ],
+    "extraction_type_group": [
+        [
+            "extraction_type_group",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "extraction_type_class": [
+        [
+            "extraction_type_class",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "amount_tsh": [
+        [
+            "amount_tsh",
+            "C__replace_0_with_nan__StrategyTransformer"
+        ]
+    ],
+    "source": [
+        [
+            "source",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ]
+    ],
+    "source_type": [
+        [
+            "source_type",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "source_class": [
+        [
+            "source_class",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "quantity": [
+        [
+            "quantity",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ]
+    ],
+    "quantity_group": [
+        [
+            "quantity_group",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "water_quality": [
+        [
+            "water_quality",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ]
+    ],
+    "quality_group": [
+        [
+            "quality_group",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "gps_height": [
+        [
+            "gps_height",
+            "C__leave_it_as_is__StrategyTransformer"
+        ]
+    ],
+    "gps_coordinates": [
+        [
+            "latitude",
+            "C__leave_it_as_is__StrategyTransformer"
+        ],
+        [
+            "longitude",
+            "C__leave_it_as_is__StrategyTransformer"
+        ]
+    ],
+    "waterpoint_type": [
+        [
+            "waterpoint_type",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ]
+    ],
+    "waterpoint_type_group": [
+        [
+            "waterpoint_type_group",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "installer": [
+        [
+            "installer",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "population": [
+        [
+            "population",
+            "C__replace_0_with_nan__StrategyTransformer"
+        ]
+    ],
+    "geographic_location": [
+        [
+            "region_code",
+            "C__drop_it__StrategyTransformer"
+        ],
+        [
+            "region",
+            "C__target_encode__not_LOO__post_encode_null_to_global_mean__StrategyTransformer"
+        ],
+        [
+            "district_code",
+            "C__drop_it__StrategyTransformer"
+        ],
+        [
+            "lga",
+            "C__drop_it__StrategyTransformer"
+        ],
+        [
+            "ward",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "subvillage": [
+        [
+            "subvillage",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "wpt_operator": [
+        [
+            "scheme_management",
+            "C__drop_it__StrategyTransformer"
+        ],
+        [
+            "scheme_name",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "pump_age": [
+        [
+            "date_recorded",
+            "C__drop_it__StrategyTransformer"
+        ],
+        [
+            "construction_year",
+            "C__leave_it_as_is__StrategyTransformer"
+        ]
+    ],
+    "payment_type": [
+        [
+            "payment_type",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "payment": [
+        [
+            "payment",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "num_private": [
+        [
+            "num_private",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "wpt_name": [
+        [
+            "wpt_name",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "basin": [
+        [
+            "basin",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "public_meeting": [
+        [
+            "public_meeting",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "recorded_by": [
+        [
+            "recorded_by",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "permit": [
+        [
+            "permit",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "management": [
+        [
+            "management",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "management_group": [
+        [
+            "management_group",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ],
+    "funder": [
+        [
+            "funder",
+            "C__drop_it__StrategyTransformer"
+        ]
+    ]
+}
