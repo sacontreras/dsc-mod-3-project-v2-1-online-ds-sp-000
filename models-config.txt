@@ -65,7 +65,7 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": true,
@@ -115,7 +115,7 @@
     },
 
     "RandomForestClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": false,
@@ -167,7 +167,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
@@ -214,6 +214,19 @@
                 */
 
 
+                //check regularization first
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 0 is default
+                            "gamma": [0, 1, 2, 3, 4, 5]
+                        },
+
+                        "last_best": {}
+                    }
+                },
                 
                 {
                     "gridsearch": {
@@ -222,6 +235,19 @@
                         "param_grid": {
                             // 10 is default
                             "max_depth": [10, 15, 20]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 100 is default
+                            "n_estimators": [100, 250, 313, 375, 500, 1000]
                         },
 
                         "last_best": {}
@@ -252,32 +278,6 @@
 
                         "last_best": {}
                     }
-                },
-                
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 0 is default
-                            "gamma": [0, 1, 2, 3, 4, 5]
-                        },
-
-                        "last_best": {}
-                    }
-                },
-                
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 100 is default
-                            "n_estimators": [100, 250, 313, 375, 500, 1000]
-                        },
-
-                        "last_best": {}
-                    }
                 }
             ]
         },
@@ -296,7 +296,6 @@
             'min_child_weight': 5,
             'n_estimators': 100
         }
-        */
         {   
             "gamma": 0,
             "learning_rate": 0.1,
@@ -304,10 +303,16 @@
             "min_child_weight": 1,
             "n_estimators": 375
         }
+        */
+        {   
+            "max_depth": 20,
+            "gamma": 1,
+            "n_estimators": 375
+        }
     },
     
     "CatBoostClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": false,
