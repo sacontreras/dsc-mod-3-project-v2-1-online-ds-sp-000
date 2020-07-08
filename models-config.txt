@@ -167,66 +167,10 @@
         "run": true,
 
         "trials": {
-            "run": true,
+            "run": false,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
-                /*
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 100 is default
-                            "n_estimators": [100, 1000],
-
-                            // 10 is default - we check depth 6 just in case
-                            "max_depth": [6, 10, 22], 
-
-                            // 0.1 is default
-                            "learning_rate": [0.1, 0.3],
-
-                            // 1 is default
-                            "min_child_weight": [1, 3, 5],
-
-                            // 1 is default
-                            // I have never seen GridSearch use a value other than default, so we will just assume parameterizing this is not much use in our case
-                            //"subsample": [0.1, 0.25, 0.5, 1.0],
-
-                            // 0 is default
-                            "gamma": [0, 1, 2, 5]
-                        },
-
-                        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
-                        //      these will be used when ['XGBClassifier']['trials']['run']==true AND ['XGBClassifier']['trials']['array'][n]['gridsearch']['run']==false
-                        //          in this way, we can turn on/off gridsearch for individual trials
-                        //
-                        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
-                        "last_best": {   
-                            "gamma": 1,
-                            "learning_rate": 0.1,
-                            "max_depth": 22,
-                            "min_child_weight": 3,
-                            "n_estimators": 100
-                       }
-                    }
-                },
-                */
-
-
-                //check regularization first
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 0 is default
-                            "gamma": [0, 1, 2, 3, 4, 5]
-                        },
-
-                        "last_best": {}
-                    }
-                },
                 
                 {
                     "gridsearch": {
@@ -247,7 +191,21 @@
 
                         "param_grid": {
                             // 100 is default
-                            "n_estimators": [100, 250, 313, 375, 500, 1000]
+                            "n_estimators": [365, 368]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+
+
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 0 is default
+                            "gamma": [0, 1, 2, 3, 4, 5]
                         },
 
                         "last_best": {}
@@ -282,68 +240,24 @@
             ]
         },
 
-        // don't forget to update this after grid search... and then set grid search to false... if the intention is to find a new best_params via grid search
-        //      these will be used when ['XGBClassifier']['trials']['run']==false
-        //      make manual adjust ments as desired here
-        //
-        // these are the results of running grid search on preprocessed data sets with digest d6a76cbd7fb874262adbd0e4a705fc31
-        "params":
-        /*
-        {   
-            'gamma': 0,
-            'learning_rate': 0.3,
-            'max_depth': 10,
-            'min_child_weight': 5,
-            'n_estimators': 100
-        }
-        {   
+        // these are the results of running grid search on preprocessed data sets with digest 8a48b1bceea8e4f07957e8a9efbe76d8
+        "params": {   
             "gamma": 0,
             "learning_rate": 0.1,
-            "max_depth": 15,
+            "max_depth": 10,
             "min_child_weight": 1,
-            "n_estimators": 375
-        }
-        */
-        {   
-            "max_depth": 20,
-            "gamma": 1,
-            "n_estimators": 375
+            "n_estimators": 368
         }
     },
     
     "CatBoostClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,
             
             "array": [
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 6 is default
-                            "max_depth": [6, 10, 16]
-                        },
-
-                        "last_best": {}
-                    }
-                },
-                
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // 1000 is default
-                            "n_estimators": [100, 500, 1000]
-                        },
-
-                        "last_best": {}
-                    }
-                },
-                
+            
                 {
                     "gridsearch": {
                         "run": true,
@@ -364,6 +278,32 @@
                         "param_grid": {
                             // "SymmetricTree" is default
                             "grow_policy": ["SymmetricTree", "Depthwise", "Lossguide"]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 6 is default
+                            "max_depth": [6, 10, 16]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // 1000 is default
+                            "n_estimators": [100, 500, 1000]
                         },
 
                         "last_best": {}
@@ -419,5 +359,95 @@
             "n_estimators": 1000,
             "nan_mode": "Min"
         }
+    },
+    
+    
+    "SVM_RBF": {
+        "run": true,
+
+        "trials": {
+            "run": true,
+            
+            "array": [
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            //default is 1.0
+                            "C": [1, 10]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // default=’scale’
+                            "gamma": [1, 100]
+                        },
+
+                        "last_best": {}
+                    }
+                }
+            ]
+        },
+        
+        "params": {}
+    },
+    
+    "SVM_Poly": {
+        "run": true,
+
+        "trials": {
+            "run": true,
+            
+            "array": [
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // default=3
+                            "degree": [3, 4]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                        //default is 0.0
+                            "coef0": [0.1, 2]
+                        },
+
+                        "last_best": {}
+                    }
+                },
+                
+                {
+                    "gridsearch": {
+                        "run": true,
+
+                        "param_grid": {
+                            // default=’scale’
+                            "gamma": [0.1, 1]
+                        },
+
+                        "last_best": {}
+                    }
+                }
+            ]
+        },
+        
+        "params": {}
     }
 }
