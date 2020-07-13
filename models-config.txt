@@ -115,7 +115,7 @@
     },
 
     "RandomForestClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": false,
@@ -164,7 +164,7 @@
     },
 
     "XGBClassifier": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": false,
@@ -363,7 +363,7 @@
     
     
     "SVM_RBF": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": true,
@@ -401,7 +401,7 @@
     },
     
     "SVM_Poly": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": true,
