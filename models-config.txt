@@ -26,41 +26,6 @@
         }
     },
 
-    /*
-    "data_cached": {
-        "digest": "1d7f80e43261a7589d64368eab8a2853",
-
-        "eda_desc": {
-            "short": "0.10 test_ratio, flat insig cat hat handling with threshold 10; location based on lat/lon"
-        },
-
-        "wrangled_data": {
-            "fname_ext": "csv",
-
-            "train": {
-                "fname_prefix": "wrangled-labeled-data-train"
-            },
-            "test": {
-                "fname_prefix": "wrangled-labeled-data-test"
-            },
-            "unlabeled": {
-                "fname_prefix": "wrangled-unlabeled-data"
-            }
-        },
-
-        "labels": {
-            "fname_ext": "csv",
-
-            "train": {
-                "fname_prefix": "labels-train"
-            },
-            "test": {
-                "fname_prefix": "labels-test"
-            }
-        }
-    },
-    */
-
     //the random_state seed used throughout the project
     "SEED": 42,
 
