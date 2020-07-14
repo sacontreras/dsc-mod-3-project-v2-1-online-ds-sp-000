@@ -30,7 +30,7 @@
     "SEED": 42,
 
     "DecisionTreeClassifier": {
-        "run": false,
+        "run": true,
 
         "trials": {
             "run": true,
@@ -83,7 +83,7 @@
         "run": true,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             "array": [
                 {
@@ -132,7 +132,7 @@
         "run": false,
 
         "trials": {
-            "run": false,
+            "run": true,
 
             // for XGBClassifier, we break up gridsearch into trials and manipulate a single parameter at a time, building on prior results... since gridsearch takes so much time
             "array": [
@@ -354,57 +354,6 @@
                         "param_grid": {
                             // default=’scale’
                             "gamma": [1, 100]
-                        },
-
-                        "last_best": {}
-                    }
-                }
-            ]
-        },
-        
-        "params": {}
-    },
-    
-    "SVM_Poly": {
-        "run": false,
-
-        "trials": {
-            "run": true,
-            
-            "array": [
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // default=3
-                            "degree": [3, 4]
-                        },
-
-                        "last_best": {}
-                    }
-                },
-                
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                        //default is 0.0
-                            "coef0": [0.1, 2]
-                        },
-
-                        "last_best": {}
-                    }
-                },
-                
-                {
-                    "gridsearch": {
-                        "run": true,
-
-                        "param_grid": {
-                            // default=’scale’
-                            "gamma": [0.1, 1]
                         },
 
                         "last_best": {}

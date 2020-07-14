@@ -26,6 +26,15 @@
                 "score": 0.8182,
                 "rank": 873
             }
+        },
+        {
+            "submission": "VC_ENSEMBLE-RF-CB-preds-8a48b1bceea8e4f07957e8a9efbe76d8.csv",
+            "date": "2020-07-14 04:40:55 UTC",
+            "preprocessing_spec": "preprocessing-options-8a48b1bceea8e4f07957e8a9efbe76d8.json",
+            "result": {
+                "score": 0.8187,
+                "rank": 837
+            }
         }
     ]
 }
