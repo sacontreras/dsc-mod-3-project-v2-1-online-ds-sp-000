@@ -309,7 +309,7 @@
     
     
     "SVM_RBF": {
-        "run": true,
+        "run": false,
 
         "trials": {
             "run": true,
